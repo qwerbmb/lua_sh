@@ -91,12 +91,24 @@ static inline int luaR_getValType(lua_State *L, sharedata* sd){
     return getValTypeA(sd->acs,sd->pos);
 }
 
+typedef struct {
+    accessor* acs;
+    int pos;
+    int eNum;
+}sdata_pstate;
+
 //获取一条出边的下一个出边，用于遍历出边
 static inline int luaR_next(lua_State *L, sharedata* sd, int edge){
     if(L){
         
     }
     return getNextEdgeA(sd->acs,edge);
+}
+
+//获取节点的第一个出边，用于pairs
+static inline int luaR_getFirst(lua_State *L, sharedata* sd){
+    if(L){}
+    return getIterStartA(sd->acs,sd->pos);
 }
 
 //把一个sd转table

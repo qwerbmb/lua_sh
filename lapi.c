@@ -520,6 +520,45 @@ LUA_API void lua_sdata2table(lua_State *L){
   
 }
 
+//把(acs,ch)对应的节点数据push到栈上
+static void pushSdataVal(lua_State *L, accessor* acs, int ch){
+  //如果不是叶子节点，返回一个新的sharedata
+  if(!isLeafA(acs,ch)){
+    lua_pushnsdata(L, acs, ch);
+    return;
+  }
+
+  //否则返回值,此时不创建新的sd
+  const void* ptr=getValA(acs, ch);
+  int ptype = getValTypeA(acs, ch);
+  switch(ptype){
+    case INTEGER:{
+      int val=*(int*)ptr;
+      lua_pushinteger(L, val);
+      break;
+    }
+    case DOUBLE:{
+      double val=*(double*)ptr;
+      lua_pushnumber(L, val);
+      break;
+    }
+    case STRING:{
+      const char* val=(const char*)ptr;
+      lua_pushstring(L, val);
+      break;
+    }
+    case BOOLEAN:{
+      int val=*(int*)ptr;
+      lua_pushboolean(L, val);
+      break;
+    }
+    default:{
+      lua_pushnil(L);
+      break;
+    }
+  }
+}
+
 //idx处是sdata，栈顶是key，操作是弹出key并返回子节点，如果已经是叶子则返回数据
 //不检查参数合法性
 LUA_API void lua_indexsdata(lua_State *L, int idx){
@@ -552,16 +591,34 @@ LUA_API void lua_indexsdata(lua_State *L, int idx){
   //得到子节点编号
   int ch=luaR_getChild(L, sd, id);
 
-  //如果不是叶子节点，返回一个新的sharedata
-  if(!isLeafA(sd->acs,ch)){
-    lua_pushnsdata(L, sd->acs, ch);
-    return;
-  }
+  pushSdataVal(L, sd->acs, ch);
+  return;
+}
 
-  //否则返回值,此时不创建新的sd
-  const void* ptr=getValA(sd->acs, ch);
-  int ptype = getValTypeA(sd->acs, ch);
-  switch(ptype){
+
+
+static int lua_sdataiter(lua_State* L){
+  sdata_pstate* state = (sdata_pstate*)lua_touserdata(L, 1);
+  accessor* acs=state->acs;
+  int pos=state->pos;
+  //int eNum=lua_tointeger(L, 2);
+  int eNum=state->eNum;
+  int eNew;
+  if(eNum==-2){
+    eNew=getIterStartA(acs,pos);
+  }
+  else{
+    eNew=getNextEdgeA(acs,eNum);
+  }
+  if(eNew<=0){
+    lua_pushnil(L);
+    return 1;
+  }
+  state->eNum=eNew;
+  int ch=getEChildA(acs,pos,eNew);
+  const void* ptr=getEdgeA(acs,eNew);
+  int type=getEdgeTypeA(acs,eNew);
+  switch(type){
     case INTEGER:{
       int val=*(int*)ptr;
       lua_pushinteger(L, val);
@@ -577,17 +634,25 @@ LUA_API void lua_indexsdata(lua_State *L, int idx){
       lua_pushstring(L, val);
       break;
     }
-    case BOOLEAN:{
-      int val=*(int*)ptr;
-      lua_pushboolean(L, val);
-      break;
-    }
     default:{
       lua_pushnil(L);
       break;
     }
   }
-  return;
+  pushSdataVal(L, acs,ch);
+  return 2;
+}
+
+LUA_API int lua_sdatapairs(lua_State *L){
+  sharedata* sd = getsharedata(L, -1);
+  lua_pushcfunction(L, lua_sdataiter);
+  sdata_pstate* state=(sdata_pstate*)lua_newuserdata(L, sizeof(sdata_pstate));
+  state->acs = sd->acs;
+  state->pos = sd->pos;
+  state->eNum = -2;
+  //printf("%ld\n",(long) state);
+  lua_pushinteger(L, state->eNum);
+  return 3;
 }
 
 
@@ -603,12 +668,6 @@ LUA_API void lua_createsdata(lua_State *L){
     
     
     accessor* acs;
-    // int fd = open(path, O_RDONLY);
-    // if(getRLock(fd) == -1){
-    //     lua_pushnil(L);
-    //     close(fd);
-    //     return ;
-    // }
     if(num==0){
         acs = getAccessorFromFile(L, path);
     }

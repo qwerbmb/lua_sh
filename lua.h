@@ -267,6 +267,7 @@ LUA_API int  (lua_getiuservalue) (lua_State *L, int idx, int n);
 
 LUA_API void (lua_indexsdata) (lua_State *L, int idx);
 LUA_API void (lua_sdata2table) (lua_State *L);
+LUA_API int (lua_sdatapairs) (lua_State *L);
 
 
 /*

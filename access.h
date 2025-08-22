@@ -76,6 +76,16 @@ static inline const void* getEdgeA(struct accessor* acs,int eNum){
     return acs->eData+acs->e[eNum].w;
 }
 
+//
+static inline int getEdgeTypeA(struct accessor* acs,int eNum){
+    return acs->e[eNum].valuetype;
+}
+
+//获取一个节点的一条出边，用于pairs
+static inline int getIterStartA(struct accessor* acs,int pos){
+    return acs->head[pos];
+}
+
 //返回边的下一条边，用于pairs
 static inline int getNextEdgeA(struct accessor* acs,int eNum){
     return acs->e[eNum].next;

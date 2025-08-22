@@ -336,6 +336,13 @@ static int l_shareTB_getData(lua_State* L){
 }
 
 
+
+static int sdata_pairs(lua_State *L){
+    return lua_sdatapairs(L);
+}
+
+
+
 static const luaL_Reg shareLib_funcs[] = {
     {"Get", l_shareLib_Get},
     {"buildFile", l_shareLib_buildFile},
@@ -354,8 +361,11 @@ static int sdata_index(lua_State *L){
     return 1;
 }
 
+
+
 static const luaL_Reg sharedatametamethods[] = {
     {"__index", sdata_index},
+    {"__pairs", sdata_pairs},
     {NULL, NULL}
 };
 

@@ -27,6 +27,20 @@ assert(sd~=nil,"get fail")
 --测试访问
 assert(sd.Attrs.Content.BothOil.TalentETips == [[T_Expedition_AttritETips28]],"access fail")
 
+local testtb={}
+local cnt=0
+-- print(sd.Attrs.Content.BothOil)
+for k,v in pairs(sd.Attrs.Content.BothOil) do
+    testtb[k]=v
+    cnt=cnt+1
+end
+-- print("----------")
+local tb=sharelib.getData(sd.Attrs.Content.BothOil)
+for k,v in pairs(tb) do
+    assert(testtb[k]==v,"pairs value fail")
+    cnt=cnt-1
+end
+assert(cnt==0,"pairs count fail")
 
 --测试gc和lock
 assert(sharelib.getLock(path)==1,"lock1 fail")
@@ -43,5 +57,5 @@ assert(sharelib.getLock(path)==1,"lock2 fail")
 sd2=nil
 collectgarbage("collect")
 local m3=collectgarbage("count")
-print(m1,m2,m3,"期望：t1>t2==t3>>t4")
+print(m1,m2,m3,"期望：m1==m2>>m3")
 assert(sharelib.getLock(path)==0,"lock4 fail")
