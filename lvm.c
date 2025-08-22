@@ -29,7 +29,7 @@
 #include "ltable.h"
 #include "ltm.h"
 #include "lvm.h"
-
+#include "lsharedata.h"
 
 /*
 ** By default, use jump tables in the main interpreter loop on gcc
@@ -601,6 +601,10 @@ int luaV_equalobj (lua_State *L, const TValue *t1, const TValue *t2) {
       if (tm == NULL)
         tm = fasttm(L, hvalue(t2)->metatable, TM_EQ);
       break;  /* will try TM */
+    }
+    case LUA_VSHAREDATA: {
+      if(equaltbvalue(sdvalue(t1), sdvalue(t2))) return 1;
+      return 0;
     }
     default:
       return gcvalue(t1) == gcvalue(t2);

@@ -26,6 +26,8 @@
 #include "ltable.h"
 #include "ltm.h"
 
+#include "lsharedata.h"
+
 
 /*
 ** Maximum number of elements to sweep in each single step.
@@ -134,6 +136,7 @@ static GCObject **getgclist (GCObject *o) {
       lua_assert(u->nuvalue > 0);
       return &u->gclist;
     }
+    case LUA_VSHAREDATA: return &gco2sd(o)->gclist;
     default: lua_assert(0); return 0;
   }
 }
@@ -316,6 +319,13 @@ static void reallymarkobject (global_State *g, GCObject *o) {
     case LUA_VLCL: case LUA_VCCL: case LUA_VTABLE:
     case LUA_VTHREAD: case LUA_VPROTO: {
       linkobjgclist(o, g->gray);  /* to be visited later */
+      break;
+    }
+    case LUA_VSHAREDATA: {
+      //也只需标记自身
+      //acs的回收由引用计数完成，不需要标记
+      //其实有点像string
+      set2black(o);
       break;
     }
     default: lua_assert(0); break;
@@ -799,6 +809,11 @@ static void freeobj (lua_State *L, GCObject *o) {
     case LUA_VLNGSTR: {
       TString *ts = gco2ts(o);
       luaM_freemem(L, ts, sizelstring(ts->u.lnglen));
+      break;
+    }
+    case LUA_VSHAREDATA: {
+      sharedata* tb = gco2sd(o);
+      luaR_free(L, tb);
       break;
     }
     default: lua_assert(0);

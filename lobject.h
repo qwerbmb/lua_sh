@@ -655,6 +655,42 @@ typedef union Closure {
 
 /* }================================================================== */
 
+/*
+sharelib
+*/
+
+//设置变体类型0
+#define LUA_VSHAREDATA makevariant(LUA_TSHAREDATA, 0)
+
+//判断是否是这个变体
+//对table和我这个，只有一个变体，等同于判断类型
+#define ttissharedata(o)	checktag((o), ctb(LUA_VSHAREDATA))
+
+//TValue转sharedata
+#define sdvalue(o) check_exp(ttissharedata(o), gco2sd(val_(o).gc))
+
+//sharedata转TValue，并设置变体类型
+#define setsdvalue(L,obj,x) \
+  { TValue *io = (obj); sharedata *x_ = (x); \
+    val_(io).gc = obj2gco(x_); settt_(io, ctb(LUA_VSHAREDATA)); \
+    checkliveness(L,io);}
+
+//把sharedata存到栈上的o位置
+//s2v是栈指针转TValue
+#define setsdvalue2s(L,o,h)	setsdvalue(L,s2v(o),h)
+
+//判断两个sharedata是否相等
+#define equaltbvalue(t1, t2) (t1->acs==t2->acs && t1->pos==t2->pos)
+
+typedef struct sharedata {
+  CommonHeader;
+  struct accessor* acs;
+  int pos;
+  GCObject *gclist;
+} sharedata;
+
+
+
 
 /*
 ** {==================================================================

@@ -30,6 +30,8 @@
 #include "lundump.h"
 #include "lvm.h"
 
+#include "lsharedata.h"
+
 
 
 const char lua_ident[] =
@@ -481,6 +483,146 @@ LUA_API const void *lua_topointer (lua_State *L, int idx) {
   }
 }
 
+//把一个sharedata放到栈上
+static void lua_pushsharedata(lua_State *L, sharedata* sd) {
+  lua_lock(L);
+  setsdvalue2s(L, L->top, sd);
+  api_incr_top(L);
+  luaC_checkGC(L);
+  lua_unlock(L);
+}
+
+static void lua_pushnsdata(lua_State *L, accessor* acs,int pos){
+  lua_pushsharedata(L, luaR_create(L, acs, pos));
+}
+
+static sharedata* getsharedata(lua_State *L, int idx) {
+  const TValue *o = index2value(L, idx);
+  if(ttissharedata(o)){
+    return sdvalue(o);
+  }
+  return NULL;
+}
+
+LUA_API void lua_pushemptysdata(lua_State *L){
+  lua_pushnsdata(L, NULL, 0);
+}
+
+//如果栈顶是一个sharedata，把对应的table push上去，不会pop
+LUA_API void lua_sdata2table(lua_State *L){
+  sharedata* sd=getsharedata(L, -1);
+  if(sd==NULL){
+    lua_pushnil(L);
+  }
+  else{
+    luaR_sdata2table(L, sd);
+  }
+  
+}
+
+//idx处是sdata，栈顶是key，操作是弹出key并返回子节点，如果已经是叶子则返回数据
+//不检查参数合法性
+LUA_API void lua_indexsdata(lua_State *L, int idx){
+  int kidx=lua_absindex(L,-1);
+  sharedata* sd = getsharedata(L, idx);
+  TValue* key = index2value(L, kidx);
+  
+  //得到出边的编号
+  int id=-1;
+  switch(ttype(key)){
+    //只有这两种key
+    case LUA_TNUMBER:{
+      lua_Integer k = lua_tointeger(L, kidx);
+      id=luaR_getEdgeI(L, sd, k);
+      break;
+    }
+      
+    case LUA_TSTRING:{
+      const char* k = lua_tostring(L, kidx);
+      id=luaR_getEdgeS(L, sd, k);
+      break;
+    }
+      
+  }
+  if(id==-1){
+    lua_pushnil(L);
+    return;
+  }
+
+  //得到子节点编号
+  int ch=luaR_getChild(L, sd, id);
+
+  //如果不是叶子节点，返回一个新的sharedata
+  if(!isLeafA(sd->acs,ch)){
+    lua_pushnsdata(L, sd->acs, ch);
+    return;
+  }
+
+  //否则返回值,此时不创建新的sd
+  const void* ptr=getValA(sd->acs, ch);
+  int ptype = getValTypeA(sd->acs, ch);
+  switch(ptype){
+    case INTEGER:{
+      int val=*(int*)ptr;
+      lua_pushinteger(L, val);
+      break;
+    }
+    case DOUBLE:{
+      double val=*(double*)ptr;
+      lua_pushnumber(L, val);
+      break;
+    }
+    case STRING:{
+      const char* val=(const char*)ptr;
+      lua_pushstring(L, val);
+      break;
+    }
+    case BOOLEAN:{
+      int val=*(int*)ptr;
+      lua_pushboolean(L, val);
+      break;
+    }
+    default:{
+      lua_pushnil(L);
+      break;
+    }
+  }
+  return;
+}
+
+
+//从path生成一个sdata，并放到栈顶
+//栈顶需要是： -2=path,-1=mode
+LUA_API void lua_createsdata(lua_State *L){
+    // if(!lua_isstring(L,-2) || !lua_isinteger(L,-1)){
+    //     lua_pushnil(L);
+    //     return;
+    // }
+    const char* path = lua_tostring(L,-2);
+    int num = lua_tointeger(L,-1);//0是文件，其他是映射
+    
+    
+    accessor* acs;
+    // int fd = open(path, O_RDONLY);
+    // if(getRLock(fd) == -1){
+    //     lua_pushnil(L);
+    //     close(fd);
+    //     return ;
+    // }
+    if(num==0){
+        acs = getAccessorFromFile(L, path);
+    }
+    else{
+        acs = getAccessorFromShare(L, path);
+    }
+    if(acs==NULL){
+        lua_pushnil(L);
+    }
+    else{
+        lua_pushnsdata(L,acs,0);
+    }
+    return ;
+}
 
 
 /*

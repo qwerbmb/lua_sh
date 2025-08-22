@@ -23,6 +23,7 @@
 #include "ltable.h"
 #include "ltm.h"
 #include "lvm.h"
+#include "lsharedata.h"
 
 
 static const char udatatypename[] = "userdata";
@@ -31,6 +32,7 @@ LUAI_DDEF const char *const luaT_typenames_[LUA_TOTALTYPES] = {
   "no value",
   "nil", "boolean", udatatypename, "number",
   "string", "table", "function", udatatypename, "thread",
+  "sharedata",
   "upvalue", "proto" /* these last cases are used for tests only */
 };
 

@@ -71,10 +71,14 @@ typedef struct lua_State lua_State;
 #define LUA_TFUNCTION		6
 #define LUA_TUSERDATA		7
 #define LUA_TTHREAD		8
+#define LUA_TSHAREDATA 9
 
-#define LUA_NUMTYPES		9
+#define LUA_NUMTYPES		10
 
-
+#define INTEGER 1
+#define DOUBLE 2
+#define STRING 3
+#define BOOLEAN 4
 
 /* minimum Lua stack available to a C function */
 #define LUA_MINSTACK	20
@@ -242,7 +246,8 @@ LUA_API void  (lua_pushcclosure) (lua_State *L, lua_CFunction fn, int n);
 LUA_API void  (lua_pushboolean) (lua_State *L, int b);
 LUA_API void  (lua_pushlightuserdata) (lua_State *L, void *p);
 LUA_API int   (lua_pushthread) (lua_State *L);
-
+LUA_API void (lua_createsdata) (lua_State *L);
+LUA_API void (lua_pushemptysdata) (lua_State *L);
 
 /*
 ** get functions (Lua -> stack)
@@ -259,6 +264,9 @@ LUA_API void  (lua_createtable) (lua_State *L, int narr, int nrec);
 LUA_API void *(lua_newuserdatauv) (lua_State *L, size_t sz, int nuvalue);
 LUA_API int   (lua_getmetatable) (lua_State *L, int objindex);
 LUA_API int  (lua_getiuservalue) (lua_State *L, int idx, int n);
+
+LUA_API void (lua_indexsdata) (lua_State *L, int idx);
+LUA_API void (lua_sdata2table) (lua_State *L);
 
 
 /*
@@ -378,6 +386,8 @@ LUA_API void (lua_closeslot) (lua_State *L, int idx);
 #define lua_isthread(L,n)	(lua_type(L, (n)) == LUA_TTHREAD)
 #define lua_isnone(L,n)		(lua_type(L, (n)) == LUA_TNONE)
 #define lua_isnoneornil(L, n)	(lua_type(L, (n)) <= 0)
+
+#define lua_issharedata(L,n) (lua_type(L, (n)) == LUA_TSHAREDATA)
 
 #define lua_pushliteral(L, s)	lua_pushstring(L, "" s)
 

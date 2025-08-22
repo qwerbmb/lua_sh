@@ -354,6 +354,7 @@ union GCUnion {
   struct Proto p;
   struct lua_State th;  /* thread */
   struct UpVal upv;
+  struct sharedata sd;
 };
 
 
@@ -376,7 +377,7 @@ union GCUnion {
 #define gco2p(o)  check_exp((o)->tt == LUA_VPROTO, &((cast_u(o))->p))
 #define gco2th(o)  check_exp((o)->tt == LUA_VTHREAD, &((cast_u(o))->th))
 #define gco2upv(o)	check_exp((o)->tt == LUA_VUPVAL, &((cast_u(o))->upv))
-
+#define gco2sd(o)  check_exp((o)->tt == LUA_VSHAREDATA, &((cast_u(o))->sd))
 
 /*
 ** macro to convert a Lua object into a GCObject

@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "access.h": "c",
+        "lobject.h": "c",
+        "llimits.h": "c",
+        "sharelib.h": "c",
+        "ldebug.h": "c",
+        "limits.h": "c",
+        "stat.h": "c",
+        "lua.h": "c",
+        "generator.h": "c",
+        "ltm.h": "c",
+        "lsharedata.h": "c",
+        "lmem.h": "c",
+        "string.h": "c"
+    }
+}
