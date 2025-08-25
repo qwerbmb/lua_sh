@@ -67,50 +67,12 @@ static inline int luaR_getChild(lua_State *L, sharedata* sd, int edge){
     return getEChildA(sd->acs,sd->pos,edge);
 }
 
-//是否是叶子节点
-static inline int luaR_isLeaf(lua_State *L, sharedata* sd){
-    if(L){
-        
-    }
-    return isLeafA(sd->acs,sd->pos);
-}
-
-
-//获取节点的值
-static inline const void* luaR_getVal(lua_State *L, sharedata* sd){
-    if(L){
-        
-    }
-    return getValA(sd->acs,sd->pos);
-}
-
-//获取节点的值的类型
-static inline int luaR_getValType(lua_State *L, sharedata* sd){
-    if(L){
-        
-    }
-    return getValTypeA(sd->acs,sd->pos);
-}
-
 typedef struct {
     accessor* acs;
     int pos;
     int eNum;
 }sdata_pstate;
 
-//获取一条出边的下一个出边，用于遍历出边
-static inline int luaR_next(lua_State *L, sharedata* sd, int edge){
-    if(L){
-        
-    }
-    return getNextEdgeA(sd->acs,edge);
-}
-
-//获取节点的第一个出边，用于pairs
-static inline int luaR_getFirst(lua_State *L, sharedata* sd){
-    if(L){}
-    return getIterStartA(sd->acs,sd->pos);
-}
 
 //把一个sd转table
 static inline void luaR_sdata2table(lua_State *L, sharedata* sd){
