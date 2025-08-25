@@ -533,7 +533,7 @@ static void pushSdataVal(lua_State *L, accessor* acs, int ch){
   int ptype = getValTypeA(acs, ch);
   switch(ptype){
     case INTEGER:{
-      int val=*(int*)ptr;
+      lua_Integer val=*(lua_Integer*)ptr;
       lua_pushinteger(L, val);
       break;
     }
@@ -617,7 +617,7 @@ static int lua_sdataiter(lua_State* L){
   int type=getEdgeTypeA(acs,eNew);
   switch(type){
     case INTEGER:{
-      int val=*(int*)ptr;
+      lua_Integer val=*(lua_Integer*)ptr;
       lua_pushinteger(L, val);
       break;
     }

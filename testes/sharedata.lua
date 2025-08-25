@@ -9,6 +9,9 @@ local tb=GetTable()
 -- assert=ast
 
 local path="./data.bin"
+
+
+
 --测试build
 assert(sharelib.buildFile(tb,path)==0,"build1 fail")
 assert(sharelib.buildFile(tb,path,1)==1,"build2 fail")
@@ -18,6 +21,8 @@ assert(sharelib.buildFile(tb,path,0)==0,"build3 fail")
 local sd=sharelib.Get(path,1)
 assert(sd~=nil,"get fail")
 
+--测试类型名
+assert(type(sd)=="sharedata","type fail")
 
 --测试index和pairs
 local function equ(...)
