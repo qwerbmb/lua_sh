@@ -568,20 +568,17 @@ LUA_API void lua_indexsdata(lua_State *L, int idx){
   
   //得到出边的编号
   int id=-1;
-  switch(ttype(key)){
-    //只有这两种key
-    case LUA_TNUMBER:{
-      lua_Integer k = lua_tointeger(L, kidx);
-      id=luaR_getEdgeI(L, sd, k);
-      break;
-    }
-      
-    case LUA_TSTRING:{
-      const char* k = lua_tostring(L, kidx);
-      id=luaR_getEdgeS(L, sd, k);
-      break;
-    }
-      
+  if(ttisinteger(key)){
+    lua_Integer k = lua_tointeger(L, kidx);
+    id=luaR_getEdgeI(L, sd, k);
+  }
+  else if (ttisnumber(key)){
+    lua_Number k = lua_tonumber(L, kidx);
+    id=luaR_getEdgeD(L, sd, k);
+  }
+  else if (ttisstring(key)){
+    const char* k = lua_tostring(L, kidx);
+    id=luaR_getEdgeS(L, sd, k);
   }
   if(id==-1){
     lua_pushnil(L);
