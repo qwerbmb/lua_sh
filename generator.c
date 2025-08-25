@@ -25,7 +25,7 @@ struct bData* initPointer(int n){
     
     //桶大小是n，至多溢出n-1次，故总大小至多为n*2
     //但是桶最小是4，所以最坏会有(n-1)*4
-    int estimated_hash_size = n * 4;
+    int estimated_hash_size = n * 8;
     global->hData = (struct hash_bucket*)calloc(estimated_hash_size, sizeof(struct hash_bucket));
     global->hDataSize = estimated_hash_size;
     
@@ -113,18 +113,7 @@ static void freeGlobal(struct bData* global){
     free(global);
 }
 
-//根据子节点数量计算hash表大小
-//目前直接设为cnt+1
-static int calculateHashSize(int childCount) {
-    if (childCount <= 0) return 0;
-    
-    // int size = 1;
-    // while (size < childCount * 2) {
-    //     size *= 2;
-    // }
-    int size=childCount+1;
-    return size < minhashsize ? minhashsize : size;
-}
+
 //int ccount=0;
 static void buildHashTable(struct bData* global, int node_pos) {
     struct node* nd = &global->nd[node_pos];

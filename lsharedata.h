@@ -6,6 +6,7 @@
 #include "lobject.h"
 #include "lmem.h"
 #include "lgc.h"
+#include "lua.h"
 
 
 //free一个sharedata
@@ -35,11 +36,11 @@ static inline sharedata* luaR_create(lua_State *L, accessor* acs,int pos){
 }
 
 //以integer为key，返回出边编号
-static inline int luaR_getEdgeI(lua_State *L, sharedata* sd, int key){
+static inline int luaR_getEdgeI(lua_State *L, sharedata* sd, lua_Integer key){
     if(L){
 
     }
-    return findEdgeA(sd->acs,sd->pos,&key,sizeof(int),INTEGER);
+    return findEdgeA(sd->acs,sd->pos,&key,INTEGER);
 }
 
 //以double为key，返回出边编号
@@ -47,7 +48,7 @@ static inline int luaR_getEdgeD(lua_State *L, sharedata* sd, double key){
     if(L){
         
     }
-    return findEdgeA(sd->acs,sd->pos,&key,sizeof(double),DOUBLE);
+    return findEdgeA(sd->acs,sd->pos,&key,DOUBLE);
 }
 
 //以string为key，返回出边编号
@@ -55,7 +56,7 @@ static inline int luaR_getEdgeS(lua_State *L, sharedata* sd, const char* key){
     if(L){
         
     }
-    return findEdgeA(sd->acs,sd->pos,key,strlen(key)+1,STRING);
+    return findEdgeA(sd->acs,sd->pos,key,STRING);
 }
 
 //从出边获取子节点

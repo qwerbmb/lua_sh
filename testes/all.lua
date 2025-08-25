@@ -194,6 +194,8 @@ dofile('bitwise.lua')
 assert(dofile('verybig.lua', true) == 10); collectgarbage()
 dofile('files.lua')
 
+dofile('sharedata.lua')
+
 if #msgs > 0 then
   local m = table.concat(msgs, "\n  ")
   warn("#tests not performed:\n  ", m, "\n")

@@ -40,66 +40,58 @@ static struct accessor* getAccessor(lua_State* L,void* ptr,int fd){
 }
 
 
-int findEdgeA(struct accessor* acs, int pos, const void* val, int siz,int ktype) {
+int findEdgeA(struct accessor* acs, int pos, const void* val,int ktype) {
     if (pos == -1) {
         return -1;
     }
-    // if(ktype==INTEGER){
-    //     printf("findEdgeA %d\n",*(int*)val);
-    // }
-    // struct node* nd = &acs->nd[pos];
-    // int hash_size = nd->childNum + 1;
-    // if (hash_size > 0) {
-    //     unsigned int hash = djb2_hash(val, siz);
-    //     int bucket_idx = hash % hash_size;
-        
-    //     struct hash_bucket* buckets = acs->hData + nd->hpos;
-        
-    //     int current = bucket_idx;
-    //     while (current != -1) {
-    //         int edge_idx = buckets[current].edge_idx;
-    //         if(ktype==INTEGER){
-    //             printf("eidxA %d\n",edge_idx);
-    //         }
-    //         if (edge_idx > 0) {
-    //             int ww = acs->e[edge_idx].w;
-    //             const char* eval = acs->eData + ww;
-    //             if(ktype==INTEGER){
-    //                 printf("valuetypeA %d\n",acs->e[edge_idx].valuetype);
-    //             }
-    //             if (ktype==acs->e[edge_idx].valuetype && memcmp(val, eval, siz) == 0) {
-    //                 if(ktype==INTEGER){
-    //                     printf("equalA %d\n",*(int*)val);
-    //                 }
-    //                 if(ktype!=STRING||strlen(eval)==strlen((const char*)val)){
-    //                     return edge_idx;
-    //                 }
-    //             }
-    //         }
-    //         current = buckets[current].next_bucket;
-    //     }
-    //     return -1;
-    // }
-    // return -1;
-    struct edge* e = acs->e;
-    int* head = acs->head;
-    
-    for (int i = head[pos]; i != 0; i = e[i].next) {
-        if (i == e[i].next) {
-            break;
-        }
-        int v = e[i].v, ww = e[i].w;
-        
-        const char* eval = acs->eData + ww;
-        
-        if (ktype==e[i].valuetype && memcmp(val, eval, siz) == 0) {
-            if(ktype!=STRING||strlen(eval)==strlen((const char*)val)){
-                return v;
-            }
-        }
+    int siz=getValSize(val,ktype);
+    struct node* nd = &acs->nd[pos];
+    int hash_size = nd->childNum+1;
+    if(hash_size<4){
+        hash_size=4;
     }
-    
+    if (hash_size > 0) {
+        unsigned int hash = djb2_hash(val, siz);
+        int bucket_idx = hash % hash_size;
+        
+        struct hash_bucket* buckets = acs->hData + nd->hpos;
+        
+        int current = bucket_idx;
+        while (current != -1) {
+            int edge_idx = buckets[current].edge_idx;
+            if (edge_idx > 0) {
+                int ww = acs->e[edge_idx].w;
+                const char* eval = acs->eData + ww;
+                if (ktype==acs->e[edge_idx].valuetype && memcmp(val, eval, siz) == 0) {
+                    if(ktype!=STRING||strlen(eval)==strlen((const char*)val)){
+                        return edge_idx;
+                    }
+                }
+            }
+            current = buckets[current].next_bucket;
+        }
+        return -1;
+    }
     return -1;
+    // struct edge* e = acs->e;
+    // int* head = acs->head;
+    
+    // for (int i = head[pos]; i != 0; i = e[i].next) {
+    //     if (i == e[i].next) {
+    //         break;
+    //     }
+    //     int v = e[i].v, ww = e[i].w;
+        
+    //     const char* eval = acs->eData + ww;
+        
+    //     if (ktype==e[i].valuetype && memcmp(val, eval, siz) == 0) {
+    //         if(ktype!=STRING||strlen(eval)==strlen((const char*)val)){
+    //             return v;
+    //         }
+    //     }
+    // }
+    
+    // return -1;
     
 }
 

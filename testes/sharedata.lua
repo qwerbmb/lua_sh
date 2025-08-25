@@ -1,10 +1,5 @@
--- for k,v in pairs(_G) do
---     print(k,v)
--- end
-
 dofile("data.lua")
 local tb=GetTable()
-
 -- local ast=function(...)
 --     for k,v in pairs({...}) do
 --         print(k,v)
@@ -55,10 +50,13 @@ local function cmp(t1,t2)
     if st=="" then
         return true
     end
+    print(st)
     return false
 end
 assert(cmp(sd,tb),"access fail")
 assert(cmp(tb,sd),"access2 fail")
+
+--测试getData
 local sdtb=sharelib.getData(sd)
 assert(cmp(sdtb,sd),"access3 fail")
 assert(cmp(sd,sdtb),"access4 fail")
@@ -81,3 +79,5 @@ collectgarbage("collect")
 local m3=collectgarbage("count")
 print(m1,m2,m3,"期望：m1==m2>>m3")
 assert(sharelib.getLock(path)==0,"lock4 fail")
+
+print("sharedata test ok")

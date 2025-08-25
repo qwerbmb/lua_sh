@@ -3,7 +3,6 @@
 
 #include "structure.h"
 
-static const int minhashsize=4;
 
 struct string_intern {
     const void* data;//指向字符串内容(可以直接转char*访问)

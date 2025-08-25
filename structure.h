@@ -39,6 +39,21 @@ static inline unsigned int djb2_hash(const void* key, int size) {
     return (unsigned int)hash;
 }
 
+static const int minhashsize=4;
+
+//根据子节点数量计算hash表大小
+//目前直接设为max(cnt+1,4)
+static inline int calculateHashSize(int childCount) {
+    if (childCount <= 0) return 0;
+    
+    // int size = 1;
+    // while (size < childCount * 2) {
+    //     size *= 2;
+    // }
+    int size=childCount+1;
+    return size < minhashsize ? minhashsize : size;
+}
+
 struct hash_bucket {
     int key_type;
     //lua的

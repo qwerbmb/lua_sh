@@ -31,7 +31,7 @@ typedef struct accessor{
 
 
 //返回key对应的边的编号
-int findEdgeA(struct accessor* acs, int pos, const void* val, int siz,int ktype);
+int findEdgeA(struct accessor* acs, int pos, const void* val,int ktype);
 
 //返回边对应的节点编号
 static inline int getEChildA(struct accessor* acs,int pos,int eNum){
