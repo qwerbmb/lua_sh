@@ -4,37 +4,28 @@
 #include "structure.h"
 
 
-struct string_intern {
-    const void* data;//指向字符串内容(可以直接转char*访问)
-    int pos;//在data或eData中的偏移量
-    int len;//字符串长度(其实就是strlen((char*)data))
-    int type;//类型
-    struct string_intern* next;
-};
+typedef struct bData{
+    int n;//节点总数
 
-struct bData{
-    int n;
-    int* head;
-    int tot;
-    struct edge* e;
-    struct node* nd;
-    char* data;
-    char* eData;
-    struct hash_bucket* hData;
-    int cnt;//data
-    int cnt2;//eData
-    int cnt3;//hData
-    int hDataSize;//hash总大小
-    int curSiz1;
-    int curSiz2;
-    int curSiz3;
+    int* heade;//树的结构
+    struct edge* e;//存放边。从1开始，其他所有都从0开始。
+    int tot;//当前e用到的位置
+
+    struct node* nd;//存放点
+
+    char* sData;//所有的数据,string以TString存储
+    int cnts;//data用到了哪
     
-    struct string_intern** value_intern_table;
-    int value_intern_size;
+    struct hash_bucket* hData;//每个节点分别的边hash
+    int* headh;//每个节点分别的边hash的头节点
+    int cnth;//hData用到了哪
+    int cnthh;//headh用到了哪
+
     
-    struct string_intern** edge_intern_table;
-    int edge_intern_size;
-};
+    struct hash_bucket* ghData;//所有的string的hash
+    int* headgh;//所有的string的hash的头节点
+    int cntgh;//ghData用到了哪
+}bData;
 
 struct bData* initPointer(int n);
 

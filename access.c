@@ -25,13 +25,15 @@ static struct accessor* getAccessor(lua_State* L,void* ptr,int fd){
     char* base=(char*)cfg;
     acs->base=base;
     acs->n=cfg->n;
-    acs->head=(int*)(base+cfg->head);
-    acs->tot=cfg->tot;
-    acs->data=base+cfg->data;
-    acs->eData=base+cfg->eData;
-    acs->e=(struct edge*)(base+cfg->edge);
-    acs->nd=(struct node*)(base+cfg->node);
+    acs->head=(int*)(base+cfg->heade);
+    acs->e=(struct edge*)(base+cfg->e);
+    acs->nd=(struct node*)(base+cfg->nd);
+    acs->sData=base+cfg->sData;
+
     acs->hData=(struct hash_bucket*)(base+cfg->hData);
+    acs->headh=(int*)(base+cfg->headh);
+    acs->ghData=(struct hash_bucket*)(base+cfg->ghData);
+    acs->headgh=(int*)(base+cfg->headgh);
     acs->size=cfg->size;
     acs->fd=fd;
     acs->count=0;
@@ -44,35 +46,13 @@ int findEdgeA(struct accessor* acs, int pos, const void* val,int ktype) {
     if (pos == -1) {
         return -1;
     }
-    int siz=getValSize(val,ktype);
-    struct node* nd = &acs->nd[pos];
-    int hash_size = nd->childNum+1;
-    if(hash_size<4){
-        hash_size=4;
-    }
-    if (hash_size > 0) {
-        unsigned int hash = djb2_hash(val, siz);
-        int bucket_idx = hash % hash_size;
-        
-        struct hash_bucket* buckets = acs->hData + nd->hpos;
-        
-        int current = bucket_idx;
-        while (current != -1) {
-            int edge_idx = buckets[current].edge_idx;
-            if (edge_idx > 0) {
-                int ww = acs->e[edge_idx].w;
-                const char* eval = acs->eData + ww;
-                if (ktype==acs->e[edge_idx].valuetype && memcmp(val, eval, siz) == 0) {
-                    if(ktype!=STRING||strlen(eval)==strlen((const char*)val)){
-                        return edge_idx;
-                    }
-                }
-            }
-            current = buckets[current].next_bucket;
-        }
+    struct node* nd = &(acs->nd[pos]);
+    int hash_size = nd->childNum;
+    int bkt = queryH(acs->hData + nd->hpos, hash_size, acs->headh, val, ktype,acs->sData);
+    if(bkt==0){
         return -1;
     }
-    return -1;
+    return acs->hData[bkt].value1;
     // struct edge* e = acs->e;
     // int* head = acs->head;
     

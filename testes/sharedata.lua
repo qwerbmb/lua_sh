@@ -1,16 +1,17 @@
 dofile("data.lua")
 local tb=GetTable()
+
+-- local rassert=assert
 -- local ast=function(...)
+--     print("assert: ")
 --     for k,v in pairs({...}) do
 --         print(k,v)
 --     end
---     assert(...)
+--     rassert(...)
+--     print("\n")
 -- end
 -- assert=ast
-
 local path="./data.bin"
-
-
 
 --测试build
 assert(sharelib.buildFile(tb,path)==0,"build1 fail")
@@ -36,8 +37,10 @@ local function equ(...)
     return true
 end
 local function tcmp(t1,t2)
+    print(t1,t2)
     for k,v in pairs(t1) do
         if type(v)=="table" or type(v)=="sharedata" then
+            print(k)
             local st=tcmp(v,t2[k])
             if st~="" then
                 --print(k,t1[k],t2[k],v)

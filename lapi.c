@@ -483,6 +483,16 @@ LUA_API const void *lua_topointer (lua_State *L, int idx) {
   }
 }
 
+//用于直接push一个TString，ptr需要在TString内部
+LUA_API const char* lua_pushsstring (lua_State *L, const char* ptr) {
+  TString* ts=(TString*)(ptr-strpre);
+  lua_lock(L);
+  setsvalue2s(L, L->top, ts);
+  api_incr_top(L);
+  luaC_checkGC(L);
+  lua_unlock(L);
+  return getstr(ts);
+}
 //把一个sharedata放到栈上
 static void lua_pushsharedata(lua_State *L, sharedata* sd) {
   lua_lock(L);
@@ -543,8 +553,10 @@ static void pushSdataVal(lua_State *L, accessor* acs, int ch){
       break;
     }
     case STRING:{
+      // const char* val=(const char*)ptr;
+      // lua_pushstring(L, val);
       const char* val=(const char*)ptr;
-      lua_pushstring(L, val);
+      lua_pushsstring(L, val);
       break;
     }
     case BOOLEAN:{
@@ -627,8 +639,10 @@ static int lua_sdataiter(lua_State* L){
       break;
     }
     case STRING:{
+      // const char* val=(const char*)ptr;
+      // lua_pushstring(L, val);
       const char* val=(const char*)ptr;
-      lua_pushstring(L, val);
+      lua_pushsstring(L, val);
       break;
     }
     default:{

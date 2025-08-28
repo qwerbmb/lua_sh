@@ -86,7 +86,7 @@ CORE_T=	liblua.a
 CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
 	lmem.o lobject.o lopcodes.o lparser.o lstate.o lstring.o ltable.o \
 	ltm.o lundump.o lvm.o lzio.o ltests.o \
-	access.o generator.o
+	access.o generator.o structure.o
 AUX_O=	lauxlib.o
 LIB_O=	lbaselib.o ldblib.o liolib.o lmathlib.o loslib.o ltablib.o lstrlib.o \
 	lutf8lib.o loadlib.o lcorolib.o linit.o \
@@ -137,12 +137,14 @@ $(ALL_O): makefile ltests.h
 # DO NOT EDIT
 # automatically made with 'gcc -MM l*.c'
 
-
-access.o: access.c lua.h luaconf.h lmem.h llimits.h lock.h access.h \
- structure.h
-generator.o: generator.c structure.h lua.h luaconf.h generator.h
-lsharelib.o: lsharelib.c lua.h luaconf.h lauxlib.h access.h structure.h \
- lock.h generator.h
+structure.o: structure.c lua.h luaconf.h structure.h lstring.h lgc.h \
+ lobject.h llimits.h lstate.h ltm.h lzio.h lmem.h
+access.o: access.c lua.h luaconf.h lmem.h llimits.h lstate.h lobject.h \
+ ltm.h lzio.h lock.h access.h structure.h
+generator.o: generator.c structure.h lua.h luaconf.h generator.h \
+ lobject.h llimits.h lstring.h lgc.h lstate.h ltm.h lzio.h lmem.h
+lsharelib.o: lsharelib.c lua.h luaconf.h lualib.h lauxlib.h access.h \
+ structure.h lock.h lmem.h llimits.h generator.h
 lapi.o: lapi.c lprefix.h lua.h luaconf.h lapi.h llimits.h lstate.h \
  lobject.h ltm.h lzio.h lmem.h ldebug.h ldo.h lfunc.h lgc.h lstring.h \
  ltable.h lundump.h lvm.h lsharedata.h access.h structure.h lock.h

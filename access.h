@@ -13,16 +13,21 @@
 #include "lmem.h"
 
 //访问器
+//其实可以让accessor直接包含一个bData
 typedef struct accessor{
     void* base;
     int n;
     int* head;
-    int tot;
     struct edge* e;
     struct node* nd;
-    char* data;
-    char* eData;
+    char* sData;
+    
     struct hash_bucket* hData;
+    int* headh;
+
+    hash_bucket* ghData;
+    int* headgh;
+
     int size;
     int fd;
     int count;
@@ -58,7 +63,7 @@ static inline int getDepthA(struct accessor* acs,int pos){
 
 //对于叶子节点返回存储的值，否则NULL
 static inline void* getValA(struct accessor* acs,int pos){
-    return pos>=0 && pos<acs->n ? acs->data+acs->nd[pos].vpos : NULL;
+    return pos>=0 && pos<acs->n ? acs->sData+acs->nd[pos].vpos : NULL;
 }
 
 //对于叶子节点，返回存储的值的类型，否则0
@@ -73,7 +78,7 @@ static inline int isLeafA(struct accessor* acs,int pos){
 
 //返回编号对应的边的值(也就是key)，用于pairs
 static inline const void* getEdgeA(struct accessor* acs,int eNum){
-    return acs->eData+acs->e[eNum].w;
+    return acs->sData+acs->e[eNum].w;
 }
 
 //

@@ -248,6 +248,7 @@ LUA_API void  (lua_pushlightuserdata) (lua_State *L, void *p);
 LUA_API int   (lua_pushthread) (lua_State *L);
 LUA_API void (lua_createsdata) (lua_State *L);
 LUA_API void (lua_pushemptysdata) (lua_State *L);
+LUA_API const char* (lua_pushsstring) (lua_State *L, const char* ptr);
 
 /*
 ** get functions (Lua -> stack)

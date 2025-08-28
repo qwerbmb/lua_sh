@@ -7,8 +7,11 @@ struct edge{
     int v,w,next;
     //w:边值地址(edata)的偏移量
     int valuetype;
+    //valuetype:边值类型
+    int ws;
+    //ws:在valuetype=STRING的情况下，value作为TString的偏移量
 };
-
+#define strpre offsetof(TString, contents)
 
 static inline int getValSize(const void* ptr, int type) {
     switch(type) {
@@ -41,51 +44,60 @@ static inline unsigned int djb2_hash(const void* key, int size) {
 
 static const int minhashsize=4;
 
-//根据子节点数量计算hash表大小
-//目前直接设为max(cnt+1,4)
-static inline int calculateHashSize(int childCount) {
-    if (childCount <= 0) return 0;
+typedef struct hash_bucket {
     
-    // int size = 1;
-    // while (size < childCount * 2) {
-    //     size *= 2;
-    // }
-    int size=childCount+1;
-    return size < minhashsize ? minhashsize : size;
-}
+    int value1;//值
 
-struct hash_bucket {
-    int key_type;
-    //lua的
-    int edge_idx;
-    int next_bucket;
-};
 
-struct node{
+    int kvalue;//key所在位置的偏移量
+    int ksvalue;//如果这是一个string，这是TString的偏移量
+    int ktype;//key的type
+    int next_bucket;//链表
+}hash_bucket;
+
+typedef struct node{
+    
     int vpos;
-    //节点对应值(data)的偏移量
+    //节点对应值(sdata)的偏移量
     int valueType;
-    
+    //节点对应值的类型
+    int vs;
+    //在valueType=STRING的情况下，value作为TString的偏移量
     int hpos;
-    //hash表(hdata)的偏移量
-    //int hash_size;    
-    //桶数量现在总是设为childNum+1
-    int depth;
-    int childNum;
-    int allChildNum;
-};
-struct config{
+    //head起始位置的偏移量,设定的head大小总是childcount
+    int depth;//深度，定义为到子树内节点的最长距离
+    int childNum;//直接子节点个数
+    int allChildNum;//所有子节点个数
+}node;
+typedef struct config{
     int n;
-    int head;
-    int tot;
-    int edge;
-    int node;
-    int data;
-    int eData;
+    int heade;
+    int e;
+    
+    int nd;
+    int sData;
+    
     int hData;
+    int headh;
+    
+    int ghData;
+    int headgh;
     int size;
     //以上数据在共享内存中起始位置的偏移量
-};
+}config;
+
+int addGH(hash_bucket* h,int hashsize,int* cntof,int* head,
+            const void* key,int ktype,int value,
+            void* kq,int* cntkq);
+
+int queryH(const hash_bucket* h,int hashsize,const int* head,
+            const void* key,int ktype,
+            const void* kq);
+
+int addNH(hash_bucket* h,int hashsize,int* cntof,int* head,
+            const void* key,int ktype,int value,
+            hash_bucket* gh,int ghsize,int* gcntof,int* ghead,
+            void* kq,int* cntkq);
 /*
 config
 head
