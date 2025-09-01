@@ -8,8 +8,6 @@ struct edge{
     //w:边值地址(edata)的偏移量
     int valuetype;
     //valuetype:边值类型
-    int ws;
-    //ws:在valuetype=STRING的情况下，value作为TString的偏移量
 };
 #define strpre offsetof(TString, contents)
 
@@ -50,7 +48,6 @@ typedef struct hash_bucket {
 
 
     int kvalue;//key所在位置的偏移量
-    int ksvalue;//如果这是一个string，这是TString的偏移量
     int ktype;//key的type
     int next_bucket;//链表
 }hash_bucket;
@@ -61,8 +58,6 @@ struct node{
     //节点对应值(sdata)的偏移量
     int valueType;
     //节点对应值的类型
-    int vs;
-    //在valueType=STRING的情况下，value作为TString的偏移量
     int hpos;
     //head起始位置的偏移量,设定的head大小总是childcount
     int depth;//深度，定义为到子树内节点的最长距离

@@ -25,7 +25,6 @@ int addGH(hash_bucket* h,int hashsize,int* cntof,int* head,
     *cntof=*cntof+1;
     fin->next_bucket=head[hash];
     head[hash]=pos;
-    fin->ksvalue=-1;
     if(ktype==STRING){
         //string在前面存一个前缀，前缀不参与查找
         //使用(Tstring*)(ptr-strpre)获取TString*
@@ -48,7 +47,6 @@ int addGH(hash_bucket* h,int hashsize,int* cntof,int* head,
             //LNGSTR的hash在加载到accessor时计算，extra标记表示已有hash
         }
         *cntkq=*cntkq+strpre;
-        fin->ksvalue=fin->kvalue-strpre;
     }
     fin->value1=value;
     fin->kvalue=*cntkq;
@@ -90,7 +88,6 @@ int addNH(hash_bucket* h,int hashsize,int* cntof,int* head,
     head[hash]=pos;
     fin->value1=value;
     fin->kvalue=gh[gpos].kvalue;
-    fin->ksvalue=gh[gpos].ksvalue;
     fin->ktype=ktype;
     return pos;
 }

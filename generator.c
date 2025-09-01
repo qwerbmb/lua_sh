@@ -134,7 +134,6 @@ void addNode(struct bData* global,int pos,const void* val,int type){
     hash_bucket* h=global->ghData;
     nd[pos].vpos=h[bkt].kvalue;
     nd[pos].valueType=type;
-    nd[pos].vs=h[bkt].ksvalue;
     nd[pos].hpos=-1;//没有出边
 }
 
@@ -150,7 +149,7 @@ void add(struct bData* global,int u,int v,const void* val,int type){
         bkt=addHashGS(global,val,type);
     }
     hash_bucket* h=global->ghData;
-    e[tot] = (struct edge){v,h[bkt].kvalue,heade[u],type,h[bkt].ksvalue};
+    e[tot] = (struct edge){v,h[bkt].kvalue,heade[u],type};
     heade[u] = tot;
     global->tot = tot;
 }
@@ -192,7 +191,7 @@ void writeFile(struct bData* global,int fd){
                   n * sizeof(int) +          //heade
                   n * sizeof(struct edge) + //edge,边从1开始
                   n * sizeof(struct node) +   //node
-                  cnts * sizeof(hash_bucket) +  //sData  
+                  cnts +  //sData  
                   
                   cnth * sizeof(hash_bucket) +  //hData
                   n * sizeof(int) + //headh

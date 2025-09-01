@@ -17,13 +17,29 @@
 #include "structure.h"
 static void setGlobalHash(lua_State* L,accessor* acs){
     global_State* g=G(L);
-    size_t* h=acs->hashval;
+    uint* h=acs->hashval;
     int cntgh=acs->cntgh;
     for(int i = 0 ;i < cntgh;i++){
         const char* val=acs->sData+acs->ghData[i].kvalue;
         h[i]=luaS_hash(val,strlen(val),g->seed);
     }
 }
+/*
+str->hash
+str->acs->hashval[str->hash]
+没法->acs
+可能直接hash指针的值？
+hashul((ul)str)
+
+
+
+另一种方式：
+str里再存一个自身偏移量，然后查找复杂度就是O(acs数量)
+
+*/
+// unsigned int getGlobalHash(lua_State* L,accessor* acs,unsigned int phash){
+//     global_State* g=G(L);
+// }
 
 //从一个指针建立访问器，指针指向的需要是writefile生成的文件
 //fd用于文件锁
@@ -49,7 +65,7 @@ static struct accessor* getAccessor(lua_State* L,void* ptr,int fd){
     acs->count=0;
     acs->isShare=0;
     
-    acs->hashval=(size_t*)luaM_malloc_(L,sizeof(size_t)*cfg->cntgh,0);
+    acs->hashval=(uint*)luaM_malloc_(L,sizeof(size_t)*cfg->cntgh,0);
     setGlobalHash(L,acs);
     global_State* g=G(L);
     acs->next=g->acslist;
@@ -227,7 +243,7 @@ static void endShareA(lua_State* L,struct accessor* acs){
         }
         a=a->next;
     }
-    luaM_free_(L,acs->hashval,sizeof(size_t)*acs->cntgh);
+    luaM_free_(L,acs->hashval,sizeof(uint)*acs->cntgh);
 
     close(acs->fd);
     //flock关闭文件描述符时自动释放

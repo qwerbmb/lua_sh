@@ -153,6 +153,7 @@ static Node *mainposition (const Table *t, int ktt, const Value *kvl) {
       if (ts->isShare){
         //在共享内存中，要去别的地方读
         //todo
+        
       }
       return hashstr(t, ts);
     }

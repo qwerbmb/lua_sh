@@ -217,9 +217,9 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
     }
   }
   /*
-  产生一个str时，优先选择复用该进程的。 
-  复用sharedata的会导致比较，hash等一堆成本增加
-  如果在某个sharemem中找到，则返回对其的引用。
+  产生一个str时，优先选择复用该进程的，然后按照添加顺序在shm查找。
+  这样，eqshrstr仍然只需要比较地址
+  todo:acslist添加改为加到末尾
   但是这样做的下场是引用计数没法(简单的)做，因为这里产生的对象是不能进allgc的
   或许可以手动扫描sdata
   */
@@ -230,7 +230,7 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
     int bkt=queryH(a->ghData,a->n*2,a->headgh,str,STRING,a->sData);
     if(bkt!=0){
       printf("%s\n",str);
-      return (TString*)(a->sData + a->ghData[bkt].ksvalue);
+      return (TString*)(a->sData + a->ghData[bkt].kvalue-strpre);
     }
     a=a->next;
   }
@@ -248,6 +248,9 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
   return ts;
 }
 
+TString *luaS_internshrstr (lua_State *L, const char *str, size_t l){
+  return internshrstr(L, str, l);
+}
 
 /*
 ** new string (with explicit length)

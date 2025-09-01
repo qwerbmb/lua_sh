@@ -12,6 +12,8 @@
 #include "lock.h"
 #include "lmem.h"
 
+typedef unsigned int uint;
+
 //访问器
 //其实可以让accessor直接包含一个bData
 typedef struct accessor{
@@ -34,7 +36,7 @@ typedef struct accessor{
     int count;
     int isShare;
     struct accessor* next;
-    size_t* hashval;
+    uint* hashval;
 }accessor;
 
 

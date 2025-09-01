@@ -555,8 +555,11 @@ static void pushSdataVal(lua_State *L, accessor* acs, int ch){
     case STRING:{
       // const char* val=(const char*)ptr;
       // lua_pushstring(L, val);
+      // const char* val=(const char*)ptr;
+      // lua_pushsstring(L, val);
       const char* val=(const char*)ptr;
-      lua_pushsstring(L, val);
+      TString* ts=luaS_internshrstr(L,val,strlen(val));
+      lua_pushsstring(L, getstr(ts));
       break;
     }
     case BOOLEAN:{
@@ -641,8 +644,11 @@ static int lua_sdataiter(lua_State* L){
     case STRING:{
       // const char* val=(const char*)ptr;
       // lua_pushstring(L, val);
+      // const char* val=(const char*)ptr;
+      // lua_pushsstring(L, val);
       const char* val=(const char*)ptr;
-      lua_pushsstring(L, val);
+      TString* ts=luaS_internshrstr(L,val,strlen(val));
+      lua_pushsstring(L, getstr(ts));
       break;
     }
     default:{
