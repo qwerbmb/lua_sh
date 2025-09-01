@@ -55,7 +55,7 @@ typedef struct hash_bucket {
     int next_bucket;//链表
 }hash_bucket;
 
-typedef struct node{
+struct node{
     
     int vpos;
     //节点对应值(sdata)的偏移量
@@ -68,7 +68,7 @@ typedef struct node{
     int depth;//深度，定义为到子树内节点的最长距离
     int childNum;//直接子节点个数
     int allChildNum;//所有子节点个数
-}node;
+};
 typedef struct config{
     int n;
     int heade;
@@ -82,6 +82,7 @@ typedef struct config{
     
     int ghData;
     int headgh;
+    int cntgh;
     int size;
     //以上数据在共享内存中起始位置的偏移量
 }config;

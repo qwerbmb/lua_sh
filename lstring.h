@@ -38,9 +38,11 @@
 /*
 ** equality for short strings, which are always internalized
 */
-#define eqshrstr(a,b)	check_exp((a)->tt == LUA_VSHRSTR, (a) == (b))
+//#define eqshrstr(a,b)	check_exp((a)->tt == LUA_VSHRSTR, (a) == (b))
 
+#define eqshrstr(a,b)	check_exp((a)->tt == LUA_VSHRSTR,((a)->isShare ||(b)->isShare) ?  luaS_eqshrstr(a,b): ((a)==(b)))
 
+//#define eqshrstr(a,b)	check_exp((a)->tt == LUA_VSHRSTR,luaS_eqshrstr(a,b))
 LUAI_FUNC unsigned int luaS_hash (const char *str, size_t l, unsigned int seed);
 LUAI_FUNC unsigned int luaS_hashlongstr (TString *ts);
 LUAI_FUNC int luaS_eqlngstr (TString *a, TString *b);
@@ -52,6 +54,6 @@ LUAI_FUNC Udata *luaS_newudata (lua_State *L, size_t s, int nuvalue);
 LUAI_FUNC TString *luaS_newlstr (lua_State *L, const char *str, size_t l);
 LUAI_FUNC TString *luaS_new (lua_State *L, const char *str);
 LUAI_FUNC TString *luaS_createlngstrobj (lua_State *L, size_t l);
-
+LUAI_FUNC int luaS_eqshrstr (TString *a, TString *b);
 
 #endif

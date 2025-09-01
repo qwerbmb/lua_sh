@@ -10,11 +10,20 @@
 #include "lua.h"
 #include "lmem.h"
 #include "lstate.h"
+#include "lstring.h"
 
 #include "lock.h"
 #include "access.h"
 #include "structure.h"
-
+static void setGlobalHash(lua_State* L,accessor* acs){
+    global_State* g=G(L);
+    size_t* h=acs->hashval;
+    int cntgh=acs->cntgh;
+    for(int i = 0 ;i < cntgh;i++){
+        const char* val=acs->sData+acs->ghData[i].kvalue;
+        h[i]=luaS_hash(val,strlen(val),g->seed);
+    }
+}
 
 //从一个指针建立访问器，指针指向的需要是writefile生成的文件
 //fd用于文件锁
@@ -34,10 +43,18 @@ static struct accessor* getAccessor(lua_State* L,void* ptr,int fd){
     acs->headh=(int*)(base+cfg->headh);
     acs->ghData=(struct hash_bucket*)(base+cfg->ghData);
     acs->headgh=(int*)(base+cfg->headgh);
+    acs->cntgh=cfg->cntgh;
     acs->size=cfg->size;
     acs->fd=fd;
     acs->count=0;
     acs->isShare=0;
+    
+    acs->hashval=(size_t*)luaM_malloc_(L,sizeof(size_t)*cfg->cntgh,0);
+    setGlobalHash(L,acs);
+    global_State* g=G(L);
+    acs->next=g->acslist;
+    g->acslist=acs;
+
     return acs;
 }
 
@@ -196,19 +213,38 @@ struct accessor* getAccessorFromShare(lua_State *L,const char* path){
 static void endShareA(lua_State* L,struct accessor* acs){
     // printf("unlock ret: %d\n",unlock(acs->fd));
     // printf("lock status: %d\n",getIsLocked(acs->fd));
+
+    global_State* g=G(L);
+    accessor* a=g->acslist;
+    if(a==acs){
+        g->acslist=NULL;
+        //todo:把acslist改成双向链表
+    }
+    while(a!=NULL){
+        if(a->next==acs){
+            a->next=acs->next;
+            break;
+        }
+        a=a->next;
+    }
+    luaM_free_(L,acs->hashval,sizeof(size_t)*acs->cntgh);
+
     close(acs->fd);
+    //flock关闭文件描述符时自动释放
     if(acs->isShare){
         //share时，base的内存是mmap分配的
         munmap(acs->base,acs->size);
         //统计到lua中
-        global_State *g=G(L);
-        g->GCdebt -= acs->size;
-        // printf("minus size: %d\n",acs->size);
+        global_State *gg=G(L);
+        gg->GCdebt -= acs->size;
+        // printf("minus size: %d\n",acs->size);        
     }
     else{
         luaM_free_(L,acs->base,acs->size);
     }
+
     luaM_free_(L,acs,sizeof(accessor));
+    printf("free acs\n");
 }
 
 //引用计数

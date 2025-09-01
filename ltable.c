@@ -150,6 +150,10 @@ static Node *mainposition (const Table *t, int ktt, const Value *kvl) {
     }
     case LUA_VSHRSTR: {
       TString *ts = tsvalueraw(*kvl);
+      if (ts->isShare){
+        //在共享内存中，要去别的地方读
+        //todo
+      }
       return hashstr(t, ts);
     }
     case LUA_VLNGSTR: {

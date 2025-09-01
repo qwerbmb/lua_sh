@@ -374,7 +374,12 @@ typedef struct TString {
   CommonHeader;
   lu_byte extra;  /* reserved words for short strings; "has hash" for longs */
   lu_byte shrlen;  /* length for short strings */
+  lu_byte isShare;  /*是否在共享内存中*/
   unsigned int hash;
+  /*
+    当一个shrstr的extra=1,或者当一个lngstr的shrlen=1时，存放进程无关的hash值
+    对于当前进程的hash去当前进程的global_state查找
+  */
   union {
     size_t lnglen;  /* length for long strings */
     struct TString *hnext;  /* linked list for hash table */

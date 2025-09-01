@@ -176,7 +176,7 @@ void writeFile(struct bData* global,int fd){
     int* heade = g->heade;
     struct edge* e = g->e;
     
-    node* nd = g->nd;
+    struct node* nd = g->nd;
     char* sData = g->sData;
     int cnts = g->cnts;
     
@@ -230,6 +230,7 @@ void writeFile(struct bData* global,int fd){
     cfg.headgh=dev;
     WMEM(addr,dev,headgh,n*2);
     //这里一定是n*2
+    cfg.cntgh=cntgh;
 
     cfg.size=fileSize;
 

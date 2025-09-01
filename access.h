@@ -27,11 +27,14 @@ typedef struct accessor{
 
     hash_bucket* ghData;
     int* headgh;
+    int cntgh;
 
     int size;
     int fd;
     int count;
     int isShare;
+    struct accessor* next;
+    size_t* hashval;
 }accessor;
 
 

@@ -20,7 +20,7 @@
 #include "lobject.h"
 #include "lstate.h"
 #include "lstring.h"
-
+#include "access.h"
 
 /*
 ** Maximum size for string table.
@@ -37,6 +37,17 @@ int luaS_eqlngstr (TString *a, TString *b) {
   return (a == b) ||  /* same instance or... */
     ((len == b->u.lnglen) &&  /* equal length and ... */
      (memcmp(getstr(a), getstr(b), len) == 0));  /* equal contents */
+}
+
+int luaS_eqshrstr (TString *a, TString *b) {
+  //至少有一方在共享内存中
+  // printf("\n\n%s len = %d \n%s len = %d \n\n",getstr(a),a->shrlen,getstr(b),b->shrlen);
+  // fflush(stdout);
+  lu_byte la = a->shrlen;
+  lua_assert(a->tt == LUA_VSHRSTR && b->tt == LUA_VSHRSTR);
+  return (a == b) ||  /* same instance or... */
+    ((la == b->shrlen) &&  /* equal length and ... */
+     (memcmp(getstr(a), getstr(b), la) == 0));  /* equal contents */
 }
 
 
@@ -149,6 +160,7 @@ static TString *createstrobj (lua_State *L, size_t l, int tag, unsigned int h) {
   ts = gco2ts(o);
   ts->hash = h;
   ts->extra = 0;
+  ts->isShare=0;
   getstr(ts)[l] = '\0';  /* ending 0 */
   return ts;
 }
@@ -186,6 +198,10 @@ static void growstrtab (lua_State *L, stringtable *tb) {
 ** Checks whether short string exists and reuses it or creates a new one.
 */
 static TString *internshrstr (lua_State *L, const char *str, size_t l) {
+  // printf("%.*s %ld\n",(int)l,str,(long)str);
+  // if(memcmp(str,"key_7",l)==0){
+  //   printf("key_7 found\n");
+  // }
   TString *ts;
   global_State *g = G(L);
   stringtable *tb = &g->strt;
@@ -199,6 +215,24 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
         changewhite(ts);  /* resurrect it */
       return ts;
     }
+  }
+  /*
+  产生一个str时，优先选择复用该进程的。 
+  复用sharedata的会导致比较，hash等一堆成本增加
+  如果在某个sharemem中找到，则返回对其的引用。
+  但是这样做的下场是引用计数没法(简单的)做，因为这里产生的对象是不能进allgc的
+  或许可以手动扫描sdata
+  */
+
+  accessor* a=g->acslist;
+  while(a!=NULL){
+    // printf("str: %.*s ;acsaddr: %ld \n",(int)l,str,(long)a);
+    int bkt=queryH(a->ghData,a->n*2,a->headgh,str,STRING,a->sData);
+    if(bkt!=0){
+      printf("%s\n",str);
+      return (TString*)(a->sData + a->ghData[bkt].ksvalue);
+    }
+    a=a->next;
   }
   /* else must create a new string */
   if (tb->nuse >= tb->size) {  /* need to grow string table? */

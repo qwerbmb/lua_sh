@@ -12,7 +12,7 @@
 #include "lobject.h"
 #include "ltm.h"
 #include "lzio.h"
-
+#include "access.h"
 
 /*
 ** Some notes about garbage-collected objects: All objects in Lua must
@@ -295,6 +295,7 @@ typedef struct global_State {
   TString *strcache[STRCACHE_N][STRCACHE_M];  /* cache for strings in API */
   lua_WarnFunction warnf;  /* warning function */
   void *ud_warn;         /* auxiliary data to 'warnf' */
+  struct accessor* acslist; /*当前加载的所有共享内存*/
 } global_State;
 
 

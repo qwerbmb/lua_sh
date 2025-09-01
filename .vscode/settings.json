@@ -13,6 +13,7 @@
         "lsharedata.h": "c",
         "lmem.h": "c",
         "string.h": "c",
-        "limits": "c"
+        "limits": "c",
+        "stdio.h": "c"
     }
 }

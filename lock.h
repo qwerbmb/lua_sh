@@ -38,6 +38,7 @@ static inline int getIsLocked(int fd){
             //读加不上去说明有人在写
             return 2;
         }
+        
         return -1;
     }
     unlock(fd);
@@ -46,6 +47,7 @@ static inline int getIsLocked(int fd){
             //如果没人在写，写加不上去说明有人在读
             return 1;
         }
+        
         return -1;
     }
     unlock(fd);
