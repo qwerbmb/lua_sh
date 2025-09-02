@@ -2,8 +2,9 @@
 从`Lua5.4.3` fork而来。  
 增加了`sharedata`到基本数据结构中。  
 `sharedata`是一种类似table的只读存储结构，需要由一个已有table build生成。  
-`sharedata`可以存储到文件，并且可以放入共享内存中由多进程访问。   
-当试图生成一个短字符串对象并驻留时，会先到lua原本的stringtable中寻找，然后按照共享内存的添加顺序在那之中寻找。  
+实现了`__index`和`__pairs`，可以像table一样访问。  
+可以存储到文件，并且可以放入共享内存中由多进程访问。   
+当试图生成一个短字符串对象并驻留时，会先到lua原本的stringtable中寻找，然后按照共享内存的添加顺序在那之中寻找。（或者可以理解为把共享内存的所有string加入stringtable，已有相同字符串则选择先产生的那个）  
 
 更详细的测试见`./testes/sharedata.lua`  
 
