@@ -134,7 +134,7 @@ l_noret luaX_syntaxerror (LexState *ls, const char *msg) {
 TString *luaX_newstring (LexState *ls, const char *str, size_t l) {
   lua_State *L = ls->L;
   TString *ts = luaS_newlstr(L, str, l);  /* create new string */
-  const TValue *o = luaH_getstr(ls->h, ts);
+  const TValue *o = luaH_getstr(L,ls->h, ts);
   if (!ttisnil(o))  /* string already present? */
     ts = keystrval(nodefromval(o));  /* get saved copy */
   else {  /* not in use yet */

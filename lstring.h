@@ -42,6 +42,8 @@
 
 // #define eqshrstr(a,b)	check_exp((a)->tt == LUA_VSHRSTR,((a)->isShare ||(b)->isShare) ?  luaS_eqshrstr(a,b): ((a)==(b)))
 
+#define ghash(L,s) (s->isShare ? luaS_gethash(L,s) : s->hash)
+
 LUAI_FUNC unsigned int luaS_hash (const char *str, size_t l, unsigned int seed);
 LUAI_FUNC unsigned int luaS_hashlongstr (TString *ts);
 LUAI_FUNC int luaS_eqlngstr (TString *a, TString *b);
@@ -55,5 +57,5 @@ LUAI_FUNC TString *luaS_new (lua_State *L, const char *str);
 LUAI_FUNC TString *luaS_createlngstrobj (lua_State *L, size_t l);
 LUAI_FUNC int luaS_eqshrstr (TString *a, TString *b);
 LUAI_FUNC TString *luaS_internshrstr (lua_State *L, const char *str, size_t l);
-
+LUAI_FUNC uint luaS_gethash(lua_State *L,TString *ts);
 #endif

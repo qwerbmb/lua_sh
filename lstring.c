@@ -50,6 +50,23 @@ int luaS_eqshrstr (TString *a, TString *b) {
      (memcmp(getstr(a), getstr(b), la) == 0));  /* equal contents */
 }
 
+uint luaS_gethash(lua_State *L,TString *ts) {
+  global_State* g=G(L);
+  int num=ts->hash;
+  for(accessor* a=g->acslist;a!=NULL;a=a->next){
+    if(num>a->cntgh){
+      continue;
+    }
+    hash_bucket* hb=a->hData+num;
+    if((char*)ts==a->sData+hb->kvalue-strpre){
+      //地址相等
+      return a->hashval[num];
+    }
+  }
+  
+  lua_assert(0);
+  return 0;//理论上上面一定能找到
+}
 
 unsigned int luaS_hash (const char *str, size_t l, unsigned int seed) {
   unsigned int h = seed ^ cast_uint(l);
@@ -70,7 +87,7 @@ unsigned int luaS_hashlongstr (TString *ts) {
 }
 
 
-static void tablerehash (TString **vect, int osize, int nsize) {
+static void tablerehash (lua_State* L,TString **vect, int osize, int nsize) {
   int i;
   for (i = osize; i < nsize; i++)  /* clear new elements */
     vect[i] = NULL;
@@ -79,7 +96,7 @@ static void tablerehash (TString **vect, int osize, int nsize) {
     vect[i] = NULL;
     while (p) {  /* for each string in the list */
       TString *hnext = p->u.hnext;  /* save next */
-      unsigned int h = lmod(p->hash, nsize);  /* new position */
+      unsigned int h = lmod(ghash(L,p), nsize);  /* new position */
       p->u.hnext = vect[h];  /* chain it into array */
       vect[h] = p;
       p = hnext;
@@ -98,18 +115,18 @@ void luaS_resize (lua_State *L, int nsize) {
   int osize = tb->size;
   TString **newvect;
   if (nsize < osize)  /* shrinking table? */
-    tablerehash(tb->hash, osize, nsize);  /* depopulate shrinking part */
+    tablerehash(L,tb->hash, osize, nsize);  /* depopulate shrinking part */
   newvect = luaM_reallocvector(L, tb->hash, osize, nsize, TString*);
   if (l_unlikely(newvect == NULL)) {  /* reallocation failed? */
     if (nsize < osize)  /* was it shrinking table? */
-      tablerehash(tb->hash, nsize, osize);  /* restore to original size */
+      tablerehash(L,tb->hash, nsize, osize);  /* restore to original size */
     /* leave table as it was */
   }
   else {  /* allocation succeeded */
     tb->hash = newvect;
     tb->size = nsize;
     if (nsize > osize)
-      tablerehash(newvect, osize, nsize);  /* rehash for new size */
+      tablerehash(L,newvect, osize, nsize);  /* rehash for new size */
   }
 }
 
@@ -136,7 +153,7 @@ void luaS_init (lua_State *L) {
   int i, j;
   stringtable *tb = &G(L)->strt;
   tb->hash = luaM_newvector(L, MINSTRTABSIZE, TString*);
-  tablerehash(tb->hash, 0, MINSTRTABSIZE);  /* clear array */
+  tablerehash(L,tb->hash, 0, MINSTRTABSIZE);  /* clear array */
   tb->size = MINSTRTABSIZE;
   /* pre-create memory-error message */
   g->memerrmsg = luaS_newliteral(L, MEMERRMSG);
@@ -175,7 +192,7 @@ TString *luaS_createlngstrobj (lua_State *L, size_t l) {
 
 void luaS_remove (lua_State *L, TString *ts) {
   stringtable *tb = &G(L)->strt;
-  TString **p = &tb->hash[lmod(ts->hash, tb->size)];
+  TString **p = &tb->hash[lmod(ghash(L,ts), tb->size)];
   while (*p != ts)  /* find previous element */
     p = &(*p)->u.hnext;
   *p = (*p)->u.hnext;  /* remove element from its list */
@@ -219,7 +236,6 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
   /*
   产生一个str时，优先选择复用该进程的，然后按照添加顺序在shm查找。
   这样，eqshrstr仍然只需要比较地址
-  todo:acslist添加改为加到末尾
   但是这样做的下场是引用计数没法(简单的)做，因为这里产生的对象是不能进allgc的
   或许可以手动扫描sdata
   */
@@ -229,7 +245,7 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
     // printf("str: %.*s ;acsaddr: %ld \n",(int)l,str,(long)a);
     int bkt=queryH(a->ghData,a->n*2,a->headgh,str,STRING,a->sData);
     if(bkt!=0){
-      printf("%s\n",str);
+      // printf("%s\n",str);
       return (TString*)(a->sData + a->ghData[bkt].kvalue-strpre);
     }
     a=a->next;

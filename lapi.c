@@ -947,7 +947,7 @@ LUA_API int lua_rawget (lua_State *L, int idx) {
   lua_lock(L);
   api_checknelems(L, 1);
   t = gettable(L, idx);
-  val = luaH_get(t, s2v(L->top - 1));
+  val = luaH_get(L,t, s2v(L->top - 1));
   L->top--;  /* remove key */
   return finishrawget(L, val);
 }
@@ -967,7 +967,7 @@ LUA_API int lua_rawgetp (lua_State *L, int idx, const void *p) {
   lua_lock(L);
   t = gettable(L, idx);
   setpvalue(&k, cast_voidp(p));
-  return finishrawget(L, luaH_get(t, &k));
+  return finishrawget(L, luaH_get(L,t, &k));
 }
 
 

@@ -60,7 +60,8 @@ void luaT_init (lua_State *L) {
 ** tag methods
 */
 const TValue *luaT_gettm (Table *events, TMS event, TString *ename) {
-  const TValue *tm = luaH_getshortstr(events, ename);
+  //元方法的名称一定不会在shm里(或者至少不要这样做)
+  const TValue *tm = luaH_getshortstr(NULL,events, ename);
   lua_assert(event <= TM_EQ);
   if (notm(tm)) {  /* no tag method? */
     events->flags |= cast_byte(1u<<event);  /* cache this fact */
@@ -82,7 +83,7 @@ const TValue *luaT_gettmbyobj (lua_State *L, const TValue *o, TMS event) {
     default:
       mt = G(L)->mt[ttype(o)];
   }
-  return (mt ? luaH_getshortstr(mt, G(L)->tmname[event]) : &G(L)->nilvalue);
+  return (mt ? luaH_getshortstr(L,mt, G(L)->tmname[event]) : &G(L)->nilvalue);
 }
 
 
@@ -94,7 +95,7 @@ const char *luaT_objtypename (lua_State *L, const TValue *o) {
   Table *mt;
   if ((ttistable(o) && (mt = hvalue(o)->metatable) != NULL) ||
       (ttisfulluserdata(o) && (mt = uvalue(o)->metatable) != NULL)) {
-    const TValue *name = luaH_getshortstr(mt, luaS_new(L, "__name"));
+    const TValue *name = luaH_getshortstr(L,mt, luaS_new(L, "__name"));
     if (ttisstring(name))  /* is '__name' a string? */
       return getstr(tsvalue(name));  /* use it as type name */
   }

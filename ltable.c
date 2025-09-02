@@ -81,7 +81,9 @@
 #define hashmod(t,n)	(gnode(t, ((n) % ((sizenode(t)-1)|1))))
 
 
-#define hashstr(t,str)		hashpow2(t, (str)->hash)
+//#define hashstr(t,str)		hashpow2(t, (str)->hash)
+
+#define hashstr(L,t,str) hashpow2(t, ((str)->isShare ?luaS_gethash(L,(str)) : (str)->hash) )
 #define hashboolean(t,p)	hashpow2(t, p)
 
 #define hashint(t,i)		hashpow2(t, i)
@@ -138,7 +140,7 @@ static int l_hashfloat (lua_Number n) {
 ** and value in 'vkl') so that we can call it on keys inserted into
 ** nodes.
 */
-static Node *mainposition (const Table *t, int ktt, const Value *kvl) {
+static Node *mainposition (lua_State* L,const Table *t, int ktt, const Value *kvl) {
   switch (withvariant(ktt)) {
     case LUA_VNUMINT: {
       lua_Integer key = ivalueraw(*kvl);
@@ -150,12 +152,7 @@ static Node *mainposition (const Table *t, int ktt, const Value *kvl) {
     }
     case LUA_VSHRSTR: {
       TString *ts = tsvalueraw(*kvl);
-      if (ts->isShare){
-        //在共享内存中，要去别的地方读
-        //todo
-        
-      }
-      return hashstr(t, ts);
+      return hashstr(L,t, ts);
     }
     case LUA_VLNGSTR: {
       TString *ts = tsvalueraw(*kvl);
@@ -184,8 +181,8 @@ static Node *mainposition (const Table *t, int ktt, const Value *kvl) {
 /*
 ** Returns the main position of an element given as a 'TValue'
 */
-static Node *mainpositionTV (const Table *t, const TValue *key) {
-  return mainposition(t, rawtt(key), valraw(key));
+static Node *mainpositionTV (lua_State* L,const Table *t, const TValue *key) {
+  return mainposition(L,t, rawtt(key), valraw(key));
 }
 
 
@@ -290,8 +287,8 @@ static unsigned int setlimittosize (Table *t) {
 ** which may be in array part, nor for floats with integral values.)
 ** See explanation about 'deadok' in function 'equalkey'.
 */
-static const TValue *getgeneric (Table *t, const TValue *key, int deadok) {
-  Node *n = mainpositionTV(t, key);
+static const TValue *getgeneric (lua_State* L,Table *t, const TValue *key, int deadok) {
+  Node *n = mainpositionTV(L,t, key);
   for (;;) {  /* check whether 'key' is somewhere in the chain */
     if (equalkey(key, n, deadok))
       return gval(n);  /* that's it */
@@ -330,7 +327,7 @@ static unsigned int findindex (lua_State *L, Table *t, TValue *key,
   if (i - 1u < asize)  /* is 'key' inside array part? */
     return i;  /* yes; that's the index */
   else {
-    const TValue *n = getgeneric(t, key, 1);
+    const TValue *n = getgeneric(L,t, key, 1);
     if (l_unlikely(isabstkey(n)))
       luaG_runerror(L, "invalid key to 'next'");  /* key not found */
     i = cast_int(nodefromval(n) - gnode(t, 0));  /* key index in hash table */
@@ -673,7 +670,7 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
   }
   if (ttisnil(value))
     return;  /* do not insert nil values */
-  mp = mainpositionTV(t, key);
+  mp = mainpositionTV(L,t, key);
   if (!isempty(gval(mp)) || isdummy(t)) {  /* main position is taken? */
     Node *othern;
     Node *f = getfreepos(t);  /* get a free place */
@@ -684,7 +681,7 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
       return;
     }
     lua_assert(!isdummy(t));
-    othern = mainposition(t, keytt(mp), &keyval(mp));
+    othern = mainposition(L,t, keytt(mp), &keyval(mp));
     if (othern != mp) {  /* is colliding node out of its main position? */
       /* yes; move colliding node into free position */
       while (othern + gnext(othern) != mp)  /* find previous */
@@ -748,9 +745,10 @@ const TValue *luaH_getint (Table *t, lua_Integer key) {
 
 /*
 ** search function for short strings
+在认为一定不在shm里时，L传入NULL
 */
-const TValue *luaH_getshortstr (Table *t, TString *key) {
-  Node *n = hashstr(t, key);
+const TValue *luaH_getshortstr (lua_State* L,Table *t, TString *key) {
+  Node *n = hashstr(L,t, key);
   lua_assert(key->tt == LUA_VSHRSTR);
   for (;;) {  /* check whether 'key' is somewhere in the chain */
     if (keyisshrstr(n) && eqshrstr(keystrval(n), key))
@@ -765,13 +763,13 @@ const TValue *luaH_getshortstr (Table *t, TString *key) {
 }
 
 
-const TValue *luaH_getstr (Table *t, TString *key) {
+const TValue *luaH_getstr (lua_State* L,Table *t, TString *key) {
   if (key->tt == LUA_VSHRSTR)
-    return luaH_getshortstr(t, key);
+    return luaH_getshortstr(L,t, key);
   else {  /* for long strings, use generic case */
     TValue ko;
     setsvalue(cast(lua_State *, NULL), &ko, key);
-    return getgeneric(t, &ko, 0);
+    return getgeneric(L,t, &ko, 0);
   }
 }
 
@@ -779,9 +777,9 @@ const TValue *luaH_getstr (Table *t, TString *key) {
 /*
 ** main search function
 */
-const TValue *luaH_get (Table *t, const TValue *key) {
+const TValue *luaH_get (lua_State* L,Table *t, const TValue *key) {
   switch (ttypetag(key)) {
-    case LUA_VSHRSTR: return luaH_getshortstr(t, tsvalue(key));
+    case LUA_VSHRSTR: return luaH_getshortstr(L,t, tsvalue(key));
     case LUA_VNUMINT: return luaH_getint(t, ivalue(key));
     case LUA_VNIL: return &absentkey;
     case LUA_VNUMFLT: {
@@ -791,7 +789,7 @@ const TValue *luaH_get (Table *t, const TValue *key) {
       /* else... */
     }  /* FALLTHROUGH */
     default:
-      return getgeneric(t, key, 0);
+      return getgeneric(L,t, key, 0);
   }
 }
 
@@ -816,7 +814,7 @@ void luaH_finishset (lua_State *L, Table *t, const TValue *key,
 ** barrier and invalidate the TM cache.
 */
 void luaH_set (lua_State *L, Table *t, const TValue *key, TValue *value) {
-  const TValue *slot = luaH_get(t, key);
+  const TValue *slot = luaH_get(L,t, key);
   luaH_finishset(L, t, key, slot, value);
 }
 
@@ -967,8 +965,8 @@ lua_Unsigned luaH_getn (Table *t) {
 
 /* export these functions for the test library */
 
-Node *luaH_mainposition (const Table *t, const TValue *key) {
-  return mainpositionTV(t, key);
+Node *luaH_mainposition (lua_State* L,const Table *t, const TValue *key) {
+  return mainpositionTV(L,t, key);
 }
 
 int luaH_isdummy (const Table *t) { return isdummy(t); }

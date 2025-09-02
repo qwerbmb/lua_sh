@@ -543,7 +543,7 @@ static int addk (FuncState *fs, TValue *key, TValue *v) {
   TValue val;
   lua_State *L = fs->ls->L;
   Proto *f = fs->f;
-  const TValue *idx = luaH_get(fs->ls->h, key);  /* query scanner table */
+  const TValue *idx = luaH_get(L,fs->ls->h, key);  /* query scanner table */
   int k, oldsize;
   if (ttisinteger(idx)) {  /* is there an index there? */
     k = cast_int(ivalue(idx));

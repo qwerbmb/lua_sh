@@ -377,8 +377,7 @@ typedef struct TString {
   lu_byte isShare;  /*是否在共享内存中*/
   unsigned int hash;
   /*
-    当一个str的isShare=1时，存放进程无关的hash值
-    对于当前进程的hash去当前进程的global_state查找
+    当一个str的isShare=1时，此处存放自身偏移量
   */
   union {
     size_t lnglen;  /* length for long strings */

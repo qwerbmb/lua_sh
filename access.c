@@ -68,8 +68,15 @@ static struct accessor* getAccessor(lua_State* L,void* ptr,int fd){
     acs->hashval=(uint*)luaM_malloc_(L,sizeof(size_t)*cfg->cntgh,0);
     setGlobalHash(L,acs);
     global_State* g=G(L);
-    acs->next=g->acslist;
-    g->acslist=acs;
+    //添加到链表末尾，保证查找是按加入顺序
+    for(accessor* a=g->acslist;a!=NULL;a=a->next){
+        if(a->next==NULL){
+            a->next=acs;
+            acs->next=NULL;
+        }
+    }
+    // acs->next=g->acslist;
+    // g->acslist=acs;
 
     return acs;
 }
@@ -109,6 +116,15 @@ int findEdgeA(struct accessor* acs, int pos, const void* val,int ktype) {
 }
 
 // 子树转table
+//返回的table含共享成分
+/*
+如果要不含共享成分会有问题。如果存在str，不在strtable但是在某个shm
+此时返回的table中的str和上述str地址不同，导致不能相等
+也就是产生了同时在两个层级的str
+
+我改了intern所以pushstring已经会在shm查找了
+
+*/
 void build_full_tableA(lua_State* L, struct accessor* acs,int pos) {
     int depth = getDepthA(acs,pos);
     //printf("%d %d\n",pos,depth);
