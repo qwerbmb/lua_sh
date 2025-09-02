@@ -89,7 +89,7 @@ assert(sharelib.getLock(path)==1,"lock2 fail")
 sd2=nil
 collectgarbage("collect")
 local m3=collectgarbage("count")
-print(m1,m2,m3,"期望：m1==m2>>m3")
+-- print(m1,m2,m3,"期望：m1==m2>>m3")
 -- assert(sharelib.getLock(path)==0,"lock4 fail")
 
 print("sharedata test ok")
