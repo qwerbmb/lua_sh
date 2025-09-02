@@ -1,7 +1,7 @@
-dofile("data.lua")
-local tb=GetTable()
+-- dofile("data.lua")
+-- local tb=GetTable()
 local path="./data.bin"
-sharelib.buildFile(tb,path)
+-- sharelib.buildFile(tb,path)
 local sd=sharelib.Get(path,1)
 --测试index和pairs
 local function equ(...)
@@ -46,12 +46,19 @@ local function cmp(t1,t2)
 end
 
 local function ptime(f,...)
-    local t1=os.clock()
-    local r=f(...)
-    local t2=os.clock()
-    print(t2-t1)
+    local avg=0
+    local ti=100
+    for i=1,ti do
+        local t1=os.clock()
+        local r=f(...)
+        local t2=os.clock()
+        avg=avg+(t2-t1)
+    end
+
+    print(avg/ti)
     return r
 end
-
+dofile("data.lua")
+local tb=GetTable()
 ptime(cmp,tb,sd)
 ptime(cmp,tb,tb)
