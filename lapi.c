@@ -533,10 +533,13 @@ LUA_API void lua_sdata2table(lua_State *L){
 //把(acs,ch)对应的节点数据push到栈上
 static void pushSdataVal(lua_State *L, accessor* acs, int ch){
   //如果不是叶子节点，返回一个新的sharedata
+  // printf("pushSdataVal pos= %d\n", ch);
   if(!isLeafA(acs,ch)){
+    // printf("not leaf\n");
     lua_pushnsdata(L, acs, ch);
     return;
   }
+  // printf("value\n\n");
 
   //否则返回值,此时不创建新的sd
   const void* ptr=getValA(acs, ch);
@@ -594,8 +597,12 @@ LUA_API void lua_indexsdata(lua_State *L, int idx){
   else if (ttisstring(key)){
     const char* k = lua_tostring(L, kidx);
     id=luaR_getEdgeS(L, sd, k);
+    // printf("%s = %d\n",k,id);
   }
   if(id==-1){
+    // printf("id is nil\n");
+    // int ty=lua_type(L, kidx);
+    // printf("key type is %d,ttisstring = %d\n", ty,(key->tt_) & 0x0F,tt);
     lua_pushnil(L);
     return;
   }

@@ -114,4 +114,6 @@ struct accessor* getAccessorFromShare(lua_State *L,const char* path);
 //修改引用计数，如果变成0会释放acs
 void countSA(lua_State *L,struct accessor* acs,int num);
 
+void endShareA(lua_State *L,struct accessor* acs);
+
 #endif

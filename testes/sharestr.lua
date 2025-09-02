@@ -1,33 +1,18 @@
 
--- local tb = {}
--- for i=1,10 do
---     tb["key_"..i]="value_"..i
--- end
-local k7="key_7"
-local v7="value_7"
-local path="./data3.bin"
--- sharelib.buildFile(tb,path)
-local sd=sharelib.Get(path,1)
-print(sharelib.getLock(path))
-print("----------------")
-local gtb=sharelib.getData(sd)
-for k,v in pairs(sd) do
-    print(k,v,v==gtb[k])
+local tb = {}
+for i=1,3 do
+    tb["key_"..i]="value_"..i
 end
--- sd=nil
--- collectgarbage("collect")
+local tbin={}
+for i=1,3 do
+    tbin["keyi_"..i]="valuei_"..i
+end
+tb["inner"]=tbin
 
--- print("hello")
+local path="./data3.bin"
+sharelib.buildFile(tb,path)
+local sd=sharelib.Get(path,1)
+for k,v in pairs(sd) do
+    print(k,v,sd[k])
+end
 
--- local a=0
--- local function outer()
---     local a=a
---     a=1
---     local function test()
---         print("test"..a)
---     end
---     return test
--- end
--- local t=outer()
--- print(a)
--- t()

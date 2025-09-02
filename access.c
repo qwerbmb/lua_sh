@@ -69,10 +69,16 @@ static struct accessor* getAccessor(lua_State* L,void* ptr,int fd){
     setGlobalHash(L,acs);
     global_State* g=G(L);
     //添加到链表末尾，保证查找是按加入顺序
-    for(accessor* a=g->acslist;a!=NULL;a=a->next){
-        if(a->next==NULL){
-            a->next=acs;
-            acs->next=NULL;
+    acs->next=NULL;
+    if(g->acslist==NULL){
+        g->acslist=acs;
+        
+    }
+    else{
+        for(accessor* a=g->acslist;a!=NULL;a=a->next){
+            if(a->next==NULL){
+                a->next=acs;
+            }
         }
     }
     // acs->next=g->acslist;
@@ -88,7 +94,7 @@ int findEdgeA(struct accessor* acs, int pos, const void* val,int ktype) {
     }
     struct node* nd = &(acs->nd[pos]);
     int hash_size = nd->childNum;
-    int bkt = queryH(acs->hData + nd->hpos, hash_size, acs->headh, val, ktype,acs->sData);
+    int bkt = queryH(acs->hData, hash_size, acs->headh + nd->hpos, val, ktype,acs->sData);
     if(bkt==0){
         return -1;
     }
@@ -242,7 +248,7 @@ struct accessor* getAccessorFromShare(lua_State *L,const char* path){
 }
 
 //释放acs指针，以及可能存在的共享内存
-static void endShareA(lua_State* L,struct accessor* acs){
+void endShareA(lua_State* L,struct accessor* acs){
     // printf("unlock ret: %d\n",unlock(acs->fd));
     // printf("lock status: %d\n",getIsLocked(acs->fd));
 
@@ -276,7 +282,7 @@ static void endShareA(lua_State* L,struct accessor* acs){
     }
 
     luaM_free_(L,acs,sizeof(accessor));
-    printf("free acs\n");
+    // printf("free acs\n");
 }
 
 //引用计数
@@ -284,11 +290,15 @@ void countSA(lua_State *L,struct accessor* acs,int num){
     if(acs==NULL){
         return;
     }
-    // printf("countSA = %d + %d \n",acs->count,num);
-    acs->count+=num;
-    if(acs->count==0){
-        // printf("endshare\n");
-        endShareA(L,acs);
+    if(L && num){
+
     }
+    // printf("countSA = %d + %d \n",acs->count,num);
+    //暂时不用引用计数了，改为close时释放
+    // acs->count+=num;
+    // if(acs->count==0){
+    //     // printf("endshare\n");
+    //     endShareA(L,acs);
+    // }
 }
 

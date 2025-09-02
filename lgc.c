@@ -27,7 +27,7 @@
 #include "ltm.h"
 
 #include "lsharedata.h"
-
+#include "access.h"
 
 /*
 ** Maximum number of elements to sweep in each single step.
@@ -1524,6 +1524,11 @@ void luaC_freeallobjects (lua_State *L) {
   deletelist(L, g->allgc, obj2gco(g->mainthread));
   deletelist(L, g->finobj, NULL);
   deletelist(L, g->fixedgc, NULL);  /* collect fixed objects */
+  // printf("%ld\n",(long)g->acslist);
+  for(accessor *acs=g->acslist;acs!=NULL;acs=acs->next){
+    endShareA(L,acs);
+  }
+  // printf("free all obj\n");
   lua_assert(g->strt.nuse == 0);
 }
 

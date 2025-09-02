@@ -126,7 +126,7 @@ static void buildHashTable(struct bData* global, int pos) {
 //把val,type赋值给pos这个节点；也就是叶子节点
 void addNode(struct bData* global,int pos,const void* val,int type){
     struct node* nd=global->nd;
-    
+    // printf("addnode: %d\n",pos);
     int bkt=queryGS(global,val,type);
     if(bkt==0){
         bkt=addHashGS(global,val,type);
@@ -139,7 +139,7 @@ void addNode(struct bData* global,int pos,const void* val,int type){
 
 //添加一条边,也就是key
 void add(struct bData* global,int u,int v,const void* val,int type){
-    //printf("add %d %d\n",u,v);
+    // printf("add %d %d type=%d\n",u,v,type);
     int tot=global->tot;
     struct edge* e=global->e;
     int* heade=global->heade;
