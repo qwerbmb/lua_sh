@@ -3,7 +3,7 @@
 增加了`sharedata`到基本数据结构中。  
 `sharedata`是一种类似table的只读存储结构，需要由一个已有table build生成。  
 `sharedata`可以存储到文件，并且可以放入共享内存中由多进程访问。   
-当试图生成一个短字符串对象并驻留时，会先到stringtable中寻找，然后按照共享内存的添加顺序在那之中寻找。  
+当试图生成一个短字符串对象并驻留时，会先到lua原本的stringtable中寻找，然后按照共享内存的添加顺序在那之中寻找。  
 
 更详细的测试见`./testes/sharedata.lua`  
 
@@ -20,8 +20,8 @@
 分别为基础值的1.45和1.07倍  
   
   
-下图分别为sharedata和table，且string指向的都是sharedata中的：
-![](img/img3.png)
+下图分别为sharedata和table，且string指向的都是sharedata中的：  
+![](img/img3.png)  
 分别为基础值的1.51和1.12倍  
 
 
