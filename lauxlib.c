@@ -894,6 +894,10 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
           lua_pushfstring(L, "%f", (LUAI_UACNUMBER)lua_tonumber(L, idx));
         break;
       }
+      case LUA_TSHAREDATA: {
+        lua_pushfstring(L, "sharedata: %s",lua_getsdname(L,idx));
+        break;
+      }
       case LUA_TSTRING:
         lua_pushvalue(L, idx);
         break;

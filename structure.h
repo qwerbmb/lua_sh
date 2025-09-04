@@ -4,13 +4,20 @@
 #include <string.h>
 #include "lua.h"
 struct edge{
-    int v,w,next;
-    //w:边值地址(edata)的偏移量
-    int valuetype;
-    //valuetype:边值类型
+    int v;  //指向的子节点
+    int w;  //边对应的key在sdata中的偏移量
+    int next;  //树结构的下一条边
+    int valuetype;  //边值类型
+    
 };
+
+//从一个TString*的数据部分(contents)获取指向完整结构的指针
 #define strpre offsetof(TString, contents)
 
+/// @brief 根据值的类型获取对应大小，str包含\0
+/// @param ptr 指向值的指针
+/// @param type 类型
+/// @return 
 static inline int getValSize(const void* ptr, int type) {
     switch(type) {
         case INTEGER:
@@ -40,29 +47,20 @@ static inline unsigned int djb2_hash(const void* key, int size) {
     return (unsigned int)hash;
 }
 
-static const int minhashsize=4;
-
 typedef struct hash_bucket {
-    
-    int value1;//值
-
-
-    int kvalue;//key所在位置的偏移量
-    int ktype;//key的type
-    int next_bucket;//链表
+    int value1;  //存储的值
+    int kvalue;  //key所在位置(sdata)的偏移量
+    int ktype;  //key的类型
+    int next_bucket;  //链表
 }hash_bucket;
 
 struct node{
-    
-    int vpos;
-    //节点对应值(sdata)的偏移量
-    int valueType;
-    //节点对应值的类型
-    int hpos;
-    //head起始位置的偏移量,设定的head大小总是childcount
-    int depth;//深度，定义为到子树内节点的最长距离
-    int childNum;//直接子节点个数
-    int allChildNum;//所有子节点个数
+    int vpos;  //节点对应值(sdata)的偏移量
+    int valueType;  //节点对应值的类型
+    int hpos;  //head起始位置的偏移量,设定的head大小总是childcount
+    int depth;  //深度，定义为到子树内节点的最长距离
+    int childNum;  //直接子节点个数
+    int allChildNum;  //所有子节点个数
 };
 typedef struct config{
     int n;
@@ -94,15 +92,5 @@ int addNH(hash_bucket* h,int hashsize,int* cntof,int* head,
             const void* key,int ktype,int value,
             hash_bucket* gh,int ghsize,int* gcntof,int* ghead,
             void* kq,int* cntkq);
-/*
-config
-head
-edge
-node
-data
-eData
-hData
-
-*/
 
 #endif

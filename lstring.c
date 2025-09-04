@@ -215,10 +215,6 @@ static void growstrtab (lua_State *L, stringtable *tb) {
 ** Checks whether short string exists and reuses it or creates a new one.
 */
 static TString *internshrstr (lua_State *L, const char *str, size_t l) {
-  // printf("%.*s %ld\n",(int)l,str,(long)str);
-  // if(memcmp(str,"key_7",l)==0){
-  //   printf("key_7 found\n");
-  // }
   TString *ts;
   global_State *g = G(L);
   stringtable *tb = &g->strt;
@@ -236,8 +232,10 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
   /*
   产生一个str时，优先选择复用该进程的，然后按照添加顺序在shm查找。
   这样，eqshrstr仍然只需要比较地址
-  但是这样做的下场是引用计数没法(简单的)做，因为这里产生的对象是不能进allgc的
-  或许可以手动扫描sdata
+  引用计数应该能做。给一个str标记时，若isShare，则遍历acslist给其acs标记
+  sharedata被标时同样标记acs
+  acs每轮gc初始清除标记，每轮gc结束时检测acs，没标记就gc
+  todo吧
   */
 
   accessor* a=g->acslist;

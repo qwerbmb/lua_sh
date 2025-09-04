@@ -29,17 +29,12 @@ typedef struct bData{
 
 struct bData* initPointer(int n);
 
-//把val,type赋值给pos这个节点；也就是叶子节点
 void addNode(struct bData* global,int pos,const void* val,int type);
 
-//添加一条边,也就是key
 void add(struct bData* global,int u,int v,const void* val,int type);
 
-//把建立好的global数据写入文件
-//要在外面关描述符
 void writeFile(struct bData* global,int fd);
 
-//遍历一个建立好的树，统计child数据
 int dfs(struct bData* global,int pos);
 
 #endif

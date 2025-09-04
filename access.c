@@ -15,6 +15,11 @@
 #include "lock.h"
 #include "access.h"
 #include "structure.h"
+#include "lsharedata.h"
+
+/// @brief 计算出所有str的hash，存到acs里面
+/// @param L 
+/// @param acs 
 static void setGlobalHash(lua_State* L,accessor* acs){
     global_State* g=G(L);
     uint* h=acs->hashval;
@@ -25,24 +30,14 @@ static void setGlobalHash(lua_State* L,accessor* acs){
     }
 }
 /*
-str->hash
-str->acs->hashval[str->hash]
-没法->acs
-可能直接hash指针的值？
-hashul((ul)str)
-
-
-
-另一种方式：
 str里再存一个自身偏移量，然后查找复杂度就是O(acs数量)
-
 */
-// unsigned int getGlobalHash(lua_State* L,accessor* acs,unsigned int phash){
-//     global_State* g=G(L);
-// }
 
-//从一个指针建立访问器，指针指向的需要是writefile生成的文件
-//fd用于文件锁
+
+/// @brief 从一个指针建立访问器
+/// @param L
+/// @param ptr 指向writefile生成的文件内容的指针
+/// @param fd 文件描述符，用于锁
 static struct accessor* getAccessor(lua_State* L,void* ptr,int fd){
     //struct accessor* acs=calloc(1,sizeof(struct accessor));
     struct accessor* acs=luaM_new(L,accessor);
@@ -87,7 +82,12 @@ static struct accessor* getAccessor(lua_State* L,void* ptr,int fd){
     return acs;
 }
 
-
+/// @brief 查询一个节点是否有对应key的出边
+/// @param acs accessor指针
+/// @param pos 节点编号
+/// @param val key的值
+/// @param ktype key的类型
+/// @return 出边编号，or -1
 int findEdgeA(struct accessor* acs, int pos, const void* val,int ktype) {
     if (pos == -1) {
         return -1;
@@ -121,16 +121,83 @@ int findEdgeA(struct accessor* acs, int pos, const void* val,int ktype) {
     
 }
 
-// 子树转table
-//返回的table含共享成分
+static void setstk(lua_State* L,const void* key,int ktype,StkId val){
+    TValue* v=s2v(val);
+    switch(ktype){
+        case INTEGER:{
+            lua_Integer k = *(lua_Integer*)key;
+            setivalue(v,k);
+            break;
+        }
+        case DOUBLE:{
+            lua_Number k = *(lua_Number*)key;
+            setfltvalue(v,k);
+            break;
+        }
+        case STRING:{
+            TString* ts=luaS_new(L, (const char*)key);
+            setsvalue2s(L,val,ts);
+            break;
+        }
+        case BOOLEAN:{
+            int k = *(int*)key;
+            if(k==0){
+                setbfvalue(v);
+            }
+            else{
+                setbtvalue(v);
+            }
+            break;
+        }
+    }
+}
+
+//setobj2s(L,stkid dst,tvalue src)
+void indexA(lua_State* L,const TValue* sd,TValue* key,StkId val) {
+    sharedata* s=sdvalue(sd);
+    accessor* acs=s->acs;
+    int pos=s->pos;
+    int id=-1;//出边id
+    if(ttisinteger(key)){
+        lua_Integer k = ivalue(key);
+        id=findEdgeA(acs, pos, &k,INTEGER);
+    }
+    else if (ttisnumber(key)){
+        lua_Number k = fltvalue(key);
+        id=findEdgeA(acs, pos, &k,DOUBLE);
+    }
+    else if (ttisstring(key)){
+        const char* k = getstr((TString*)tsvalue(key));
+        id=findEdgeA(acs, pos, k,STRING);
+    }
+    if(id==-1){
+        setnilvalue(s2v(val));
+        return;
+    }
+    int ch=getEChildA(acs,pos,id);
+    if(!isLeafA(acs,ch)){
+        //setsd
+        sharedata* shd=luaR_create(L, acs, ch);
+        setsdvalue2s(L,val,shd);
+        return;
+    }
+    const void* ptr=getValA(acs, ch);
+    int ptype = getValTypeA(acs, ch);
+    setstk(L,ptr,ptype,val);
+}
+
 /*
+返回的table含共享成分
 如果要不含共享成分会有问题。如果存在str，不在strtable但是在某个shm
 此时返回的table中的str和上述str地址不同，导致不能相等
 也就是产生了同时在两个层级的str
-
 我改了intern所以pushstring已经会在shm查找了
-
 */
+
+/// @brief 把pos为根的子树转为table，push到栈上
+/// @param L 
+/// @param acs 
+/// @param pos 
 void build_full_tableA(lua_State* L, struct accessor* acs,int pos) {
     int depth = getDepthA(acs,pos);
     //printf("%d %d\n",pos,depth);
@@ -181,6 +248,9 @@ void build_full_tableA(lua_State* L, struct accessor* acs,int pos) {
     }
 }
 
+/// @brief 从文件获取一个accessor，不加载到shm
+/// @param L
+/// @param path 文件路径
 struct accessor* getAccessorFromFile(lua_State *L,const char* path){
     //const char* path="testnc";
     int fd = open(path, O_RDONLY);
@@ -204,12 +274,13 @@ struct accessor* getAccessorFromFile(lua_State *L,const char* path){
 
     content[file_size] = '\0';
     struct accessor* acs=getAccessor(L,content,fd);
+    acs->path=(char*)luaM_malloc_(L,strlen(path)+1,0);
+    strcpy(acs->path,path);
     return acs;
 }
 
 //从文件描述符获取一块等于文件大小的共享内存
 static void* getShare(lua_State* L,int fd){
-    //没办法，lua并没有提供类似luaM_mmap的东西
     struct stat sb;
     if (fstat(fd, &sb) == -1) {
         close(fd);
@@ -235,6 +306,8 @@ static void* getShare(lua_State* L,int fd){
     // printf("alloc share size: %ld\n",file_size);
     return ptr;
 }
+
+/// @brief 从文件获取一个acs，并加载到shm
 struct accessor* getAccessorFromShare(lua_State *L,const char* path){
     int fd = open(path, O_RDONLY);
     if (fd == -1) {
@@ -244,10 +317,12 @@ struct accessor* getAccessorFromShare(lua_State *L,const char* path){
     void* ptr=getShare(L,fd);
     accessor* acs=getAccessor(L,ptr,fd);
     acs->isShare=1;
+    acs->path=(char*)luaM_malloc_(L,strlen(path)+1,0);
+    strcpy(acs->path,path);
     return acs;
 }
 
-//释放acs指针，以及可能存在的共享内存
+//acs指针的gc
 void endShareA(lua_State* L,struct accessor* acs){
     // printf("unlock ret: %d\n",unlock(acs->fd));
     // printf("lock status: %d\n",getIsLocked(acs->fd));

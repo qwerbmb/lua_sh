@@ -260,9 +260,22 @@ static int luaB_next (lua_State *L) {
   }
 }
 
+static int luaB_sdnext(lua_State *L) {
+  luaL_checktype(L,1,LUA_TSHAREDATA);
+  lua_settop(L,2);
+  return lua_sdatanext(L,1);
+}
+
 
 static int luaB_pairs (lua_State *L) {
   luaL_checkany(L, 1);
+  if(lua_type(L,1)==LUA_TSHAREDATA){
+    lua_initsdataiter(L,1);
+    lua_pushcfunction(L,luaB_sdnext);
+    lua_pushvalue(L, 1);
+    lua_pushnil(L);
+    return 3;
+  }
   if (luaL_getmetafield(L, 1, "__pairs") == LUA_TNIL) {  /* no metamethod? */
     lua_pushcfunction(L, luaB_next);  /* will return generator, */
     lua_pushvalue(L, 1);  /* state, */

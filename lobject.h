@@ -690,6 +690,7 @@ typedef struct sharedata {
   CommonHeader;
   struct accessor* acs;
   int pos;
+  int inum;
   GCObject *gclist;
 } sharedata;
 

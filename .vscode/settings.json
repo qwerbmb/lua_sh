@@ -14,6 +14,7 @@
         "lmem.h": "c",
         "string.h": "c",
         "limits": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "structure.h": "c"
     }
 }

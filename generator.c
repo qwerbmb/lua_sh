@@ -33,7 +33,7 @@ struct bData* initPointer(int n){
     global->hData = (struct hash_bucket*)calloc(n, sizeof(struct hash_bucket));
     global->headh = (int*)calloc(global->n,sizeof(int));
     //memset(global->headh,0xFF,sizeof(int)*global->n);
-    global->cnth=1;//初始化为1，遍历时可以直接判断!=0
+    global->cnth=1;//初始化为1，遍历时可以直接判断桶编号!=0
     global->cnthh=0;
 
     //链表合计长度 <= 节点总数+边数 <=n*2-1 < n*2
@@ -74,6 +74,7 @@ static inline int addHashGS(bData* global,const void* ptr,int ktype){
 /// @brief 查询一个元素在全局hash表中的位置
 /// @param global 
 /// @param ptr 
+/// @param ktype
 /// @return 偏移量
 static int queryGS(bData* global,const void* ptr,int ktype){
     int ret=queryH(global->ghData,global->n*2,global->headgh,
@@ -83,12 +84,10 @@ static int queryGS(bData* global,const void* ptr,int ktype){
 }
 
 
-/// @brief 向某个节点的hash表插入一个元素
+/// @brief 向某个节点的hash表插入一条边的key
 /// @param global 
-/// @param ptr 
-/// @param ktype 
-/// @param pos 
-/// @param eNum 
+/// @param pos 要插入的节点
+/// @param eNum 要插入的边的编号，会使用它的val和valuetype
 /// @return 
 static int addHashNS(bData* global,int pos,int eNum){
     bData* g=global;
@@ -154,11 +153,6 @@ void add(struct bData* global,int u,int v,const void* val,int type){
     global->tot = tot;
 }
 
-//从指针a处复制num个元素到addr处，并使addr增加写入的长度
-#define WSZ(addr, a , num) do { \
-    memcpy(addr, a, num*sizeof(*a)); \
-    addr = (char*)addr + num*sizeof(*a); \
-} while(0)
 
 //从指针a处复制num个元素到addr+dev处，并使dev增加写入的长度
 #define WMEM(addr,dev, a , num) do { \
@@ -182,6 +176,7 @@ void writeFile(struct bData* global,int fd){
     hash_bucket* hData = g->hData;
     int* headh = g->headh;
     int cnth = g->cnth;
+    int cnthh = g->cnthh;
     
     hash_bucket* ghData = g->ghData;
     int* headgh = g->headgh;
@@ -194,7 +189,7 @@ void writeFile(struct bData* global,int fd){
                   cnts +  //sData  
                   
                   cnth * sizeof(hash_bucket) +  //hData
-                  n * sizeof(int) + //headh
+                  cnthh * sizeof(int) + //headh
                   cntgh * sizeof(hash_bucket) +  //ghData
                   n * 2 * sizeof(int) ;  //headgh
     
@@ -220,8 +215,7 @@ void writeFile(struct bData* global,int fd){
     WMEM(addr,dev,hData,cnth);
 
     cfg.headh=dev;
-    WMEM(addr,dev,headh,n);
-    //这里是n-(叶子节点数量)，但是int多一些不关键
+    WMEM(addr,dev,headh,cnthh);
 
     cfg.ghData=dev;
     WMEM(addr,dev,ghData,cntgh);

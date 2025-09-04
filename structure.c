@@ -9,9 +9,9 @@
 /// @param hashsize 全局hash大小
 /// @param cntof 当前用到了哪
 /// @param head 头节点
-/// @param key 
-/// @param ktype 
-/// @param value 
+/// @param key 键
+/// @param ktype 键的类型
+/// @param value 值(实际上全局hash不需要值，所以填0)
 /// @param kq key存放的位置
 /// @param cntkq kq用到了哪
 /// @return 插入到的桶编号
@@ -93,13 +93,13 @@ int addNH(hash_bucket* h,int hashsize,int* cntof,int* head,
 }
 
 
-/// @brief 查询一个key
-/// @param h 
-/// @param hashsize 
-/// @param head 
-/// @param key 
-/// @param ktype 
-/// @param kq 
+/// @brief 在给定hash表中查询一个key
+/// @param h 要查询的hash表
+/// @param hashsize 头节点数量
+/// @param head 头节点
+/// @param key 键
+/// @param ktype key的类型
+/// @param kq key存放的位置
 /// @return 桶编号，or 0
 int queryH(const hash_bucket* h,int hashsize,const int* head,
             const void* key,int ktype,
@@ -123,6 +123,5 @@ int queryH(const hash_bucket* h,int hashsize,const int* head,
 key=str
 
 2.点的出边hash
-key=str,value=int
-每组hash相同的key会对应不同value
+key=str,value=int=边的编号
 */

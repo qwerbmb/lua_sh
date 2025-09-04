@@ -38,6 +38,7 @@ static int l_shareLib_Get(lua_State* L) {
     return 1;
 }
 
+//参数：table tb
 //遍历一个table，获取节点总数，用于确定空间大小
 static int getTableSize(lua_State *L) {
     int ret=1;
@@ -84,6 +85,10 @@ static void traverse_table(lua_State *L,struct bData* gptr,int* tot) {
                 add(gptr,pos,*tot,&val,DOUBLE);
             }
         }
+        else{
+            //key只能是string,number,integer
+            luaL_error(L, "key type error : %s",luaL_typename(L,-2));
+        }
         
         //value
         int valueType = lua_type(L, -1);
@@ -111,22 +116,17 @@ static void traverse_table(lua_State *L,struct bData* gptr,int* tot) {
             case LUA_TBOOLEAN:
                 ;
                 int val=lua_toboolean(L,-1);
-                // if(val==0){
-                //     printf("%d false gen\n",val);
-                // }
-                // else{
-                //     printf("%d true gen\n",val);
-                // }
                 addNode(gptr,*tot,&val,BOOLEAN);
                 (*tot)++;
                 break;
             default:
                 //不应该有其他类型，对于配置文件来说
                 //userdata的话，应该转table
+                luaL_error(L, "value type error : %s",luaL_typename(L,-1));
                 break;
         }
         
-        lua_pop(L, 1);
+        lua_pop(L, 1);//pop掉value，key给next获取下一个
     }
 }
 
@@ -197,22 +197,13 @@ static int l_shareLib_buildFile(lua_State* L) {
         lua_pushinteger(L, -1);
         return 1;
     }
+    //成功打开了文件，开始build
     int n=getTableSize(L);
     struct bData* gptr=initPointer(n);
     int tot=0;
     traverse_table(L,gptr,&tot);
     dfs(gptr,0);
-    // printf("n=%d\n",n);
-    // for(int i=0;i<n;i++){
-    //     struct edge* e=gptr->e;
-    //     printf("%d %d %d %d\n",e[i].v,e[i].w,e[i].next,e[i].valuetype);
-    //     if(e[i].valuetype==LUA_TSTRING){
-    //         printf("edgeval : %s\n",gptr->eData+e[i].w);
-    //     }
-        
-    // }
     writeFile(gptr,fd);
-    //sleep(20);
     unlock(fd);
     close(fd);
     lua_pushinteger(L, 0);
@@ -278,9 +269,11 @@ static void traverse_dir(lua_State *L,const char* path) {
             continue;
         }
         if(S_ISDIR(st.st_mode)){
+            //是目录，递归下去
             traverse_dir(L,newpath);
         }
         else if (S_ISREG(st.st_mode)){
+            //是文件，添加到table
             char* ret = pathTr(newpath);
             if(ret != NULL){
                 lua_pushstring(L,ret);
@@ -337,12 +330,6 @@ static int l_shareTB_getData(lua_State* L){
 
 
 
-static int sdata_pairs(lua_State *L){
-    return lua_sdatapairs(L);
-}
-
-
-
 static const luaL_Reg shareLib_funcs[] = {
     {"Get", l_shareLib_Get},
     {"buildFile", l_shareLib_buildFile},
@@ -352,30 +339,9 @@ static const luaL_Reg shareLib_funcs[] = {
     {NULL, NULL}
 };
 
-//__index
-static int sdata_index(lua_State *L){
-    if(!lua_issharedata(L,1)){
-        luaL_error(L,"not a sharedata");
-    }
-    lua_indexsdata(L,1);
-    return 1;
-}
-
-
-
-static const luaL_Reg sharedatametamethods[] = {
-    {"__index", sdata_index},
-    {"__pairs", sdata_pairs},
-    {NULL, NULL}
-};
 
 LUAMOD_API int luaopen_shareLib (lua_State *L) {
     luaL_newlib(L, shareLib_funcs);
-    lua_pushemptysdata(L);
-    luaL_newmetatable(L, "sharedata_mt");
-    luaL_setfuncs(L, sharedatametamethods, 0);
-    lua_setmetatable(L, -2);//这里会pop掉栈顶
-    lua_pop(L,1);
     return 1;
 }
 

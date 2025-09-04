@@ -11,36 +11,36 @@
 #include "structure.h"
 #include "lock.h"
 #include "lmem.h"
+#include "lobject.h"
 
 typedef unsigned int uint;
 
-//访问器
-//其实可以让accessor直接包含一个bData
 typedef struct accessor{
-    void* base;
-    int n;
-    int* head;
-    struct edge* e;
-    struct node* nd;
-    char* sData;
+    void* base; //文件内容
+    int n;  //节点总数
+    int* head;  //存储树结构的头节点
+    struct edge* e;  //边
+    struct node* nd;  //节点
+    char* sData;  //存储的数据；int,double也转为char*存储
     
-    struct hash_bucket* hData;
-    int* headh;
+    struct hash_bucket* hData;  //节点出边的hash
+    int* headh;  //hdata的头节点；节点需要headh+nd[pos].hpos获取自身头节点起始位置
 
-    hash_bucket* ghData;
-    int* headgh;
-    int cntgh;
+    hash_bucket* ghData;  //sdata的hash
+    int* headgh;  //ghdata的头节点
+    int cntgh;   //sdata的元素总数量，= ghdata的数量
+    //以上是把config的偏移量转换回的指针
 
-    int size;
-    int fd;
-    int count;
-    int isShare;
-    struct accessor* next;
-    uint* hashval;
+    int size;  //base大小
+    int fd;  //打开base使用的文件描述符
+    int count;  //引用计数
+    int isShare;  //是否在shm
+    struct accessor* next;  //当前进程加载的下一个acs
+    uint* hashval;  //当前acs里所有str值的hash
+    char* path;
 }accessor;
 
 
-//返回key对应的边的编号
 int findEdgeA(struct accessor* acs, int pos, const void* val,int ktype);
 
 //返回边对应的节点编号
@@ -86,7 +86,7 @@ static inline const void* getEdgeA(struct accessor* acs,int eNum){
     return acs->sData+acs->e[eNum].w;
 }
 
-//
+//获取一条边的key的类型
 static inline int getEdgeTypeA(struct accessor* acs,int eNum){
     return acs->e[eNum].valuetype;
 }
@@ -101,17 +101,14 @@ static inline int getNextEdgeA(struct accessor* acs,int eNum){
     return acs->e[eNum].next;
 }
 
-// 子树转table
+void indexA(lua_State* L,const TValue* sd,TValue* key,StkId val);
+
 void build_full_tableA(lua_State* L, struct accessor* acs,int pos);
 
-//从文件产生一个访问器
 struct accessor* getAccessorFromFile(lua_State *L,const char* path);
 
-//把文件映射到共享内存，产生一个访问器
 struct accessor* getAccessorFromShare(lua_State *L,const char* path);
 
-
-//修改引用计数，如果变成0会释放acs
 void countSA(lua_State *L,struct accessor* acs,int num);
 
 void endShareA(lua_State *L,struct accessor* acs);

@@ -291,6 +291,11 @@ void luaV_finishget (lua_State *L, const TValue *t, TValue *key, StkId val,
   for (loop = 0; loop < MAXTAGLOOP; loop++) {
     if (slot == NULL) {  /* 't' is not a table? */
       lua_assert(!ttistable(t));
+      if(ttissharedata(t)){
+        //如果是sd，就不查元表
+        indexA(L,t,key,val);
+        return;
+      }
       tm = luaT_gettmbyobj(L, t, TM_INDEX);
       if (l_unlikely(notm(tm)))
         luaG_typeerror(L, t, "index");  /* no metamethod */
@@ -298,6 +303,7 @@ void luaV_finishget (lua_State *L, const TValue *t, TValue *key, StkId val,
     }
     else {  /* 't' is a table */
       lua_assert(isempty(slot));
+      //因为能在table里index出来的情况已经在外面的fastget处理了
       tm = fasttm(L, hvalue(t)->metatable, TM_INDEX);  /* table's metamethod */
       if (tm == NULL) {  /* no metamethod? */
         setnilvalue(s2v(val));  /* result is nil */

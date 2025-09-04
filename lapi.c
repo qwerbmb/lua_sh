@@ -483,7 +483,10 @@ LUA_API const void *lua_topointer (lua_State *L, int idx) {
   }
 }
 
+
+
 //用于直接push一个TString，ptr需要在TString内部
+//只用于长字符串，pushstring时短字符串会到internshrstr，有检测acs
 LUA_API const char* lua_pushsstring (lua_State *L, const char* ptr) {
   TString* ts=(TString*)(ptr-strpre);
   lua_lock(L);
@@ -502,10 +505,12 @@ static void lua_pushsharedata(lua_State *L, sharedata* sd) {
   lua_unlock(L);
 }
 
+//从acs,pos创建一个sharedata，并push到栈上
 static void lua_pushnsdata(lua_State *L, accessor* acs,int pos){
   lua_pushsharedata(L, luaR_create(L, acs, pos));
 }
 
+//从栈上的idx位置获取一个sharedata
 static sharedata* getsharedata(lua_State *L, int idx) {
   const TValue *o = index2value(L, idx);
   if(ttissharedata(o)){
@@ -514,6 +519,15 @@ static sharedata* getsharedata(lua_State *L, int idx) {
   return NULL;
 }
 
+LUA_API const char* lua_getsdname(lua_State *L, int idx){
+  sharedata* sd=getsharedata(L, idx);
+  if(sd==NULL){
+    return NULL;
+  }
+  return sd->acs->path;
+}
+
+//push一个空的sharedata，用于lib设置元表
 LUA_API void lua_pushemptysdata(lua_State *L){
   lua_pushnsdata(L, NULL, 0);
 }
@@ -533,14 +547,10 @@ LUA_API void lua_sdata2table(lua_State *L){
 //把(acs,ch)对应的节点数据push到栈上
 static void pushSdataVal(lua_State *L, accessor* acs, int ch){
   //如果不是叶子节点，返回一个新的sharedata
-  // printf("pushSdataVal pos= %d\n", ch);
   if(!isLeafA(acs,ch)){
-    // printf("not leaf\n");
     lua_pushnsdata(L, acs, ch);
     return;
   }
-  // printf("value\n\n");
-
   //否则返回值,此时不创建新的sd
   const void* ptr=getValA(acs, ch);
   int ptype = getValTypeA(acs, ch);
@@ -556,13 +566,15 @@ static void pushSdataVal(lua_State *L, accessor* acs, int ch){
       break;
     }
     case STRING:{
-      // const char* val=(const char*)ptr;
-      // lua_pushstring(L, val);
-      // const char* val=(const char*)ptr;
-      // lua_pushsstring(L, val);
       const char* val=(const char*)ptr;
-      TString* ts=luaS_internshrstr(L,val,strlen(val));
-      lua_pushsstring(L, getstr(ts));
+      if(strlen(val)>LUAI_MAXSHORTLEN){
+        //长字符串直接用这个
+        //lua本身不对长串intern，所以地址不同没关系
+        lua_pushsstring(L, val);
+      }
+      else{
+        lua_pushstring(L, val);
+      }
       break;
     }
     case BOOLEAN:{
@@ -583,7 +595,8 @@ LUA_API void lua_indexsdata(lua_State *L, int idx){
   int kidx=lua_absindex(L,-1);
   sharedata* sd = getsharedata(L, idx);
   TValue* key = index2value(L, kidx);
-  
+  //用这一堆luaR本意是可以不用把accessor暴露出来，但是最后还是暴露出来了
+  //但是这个现在也能用
   //得到出边的编号
   int id=-1;
   if(ttisinteger(key)){
@@ -609,34 +622,31 @@ LUA_API void lua_indexsdata(lua_State *L, int idx){
 
   //得到子节点编号
   int ch=luaR_getChild(L, sd, id);
-
+  //数据push上去
   pushSdataVal(L, sd->acs, ch);
   return;
 }
 
 
 
-static int lua_sdataiter(lua_State* L){
-  sdata_pstate* state = (sdata_pstate*)lua_touserdata(L, 1);
-  accessor* acs=state->acs;
-  int pos=state->pos;
-  //int eNum=lua_tointeger(L, 2);
-  int eNum=state->eNum;
-  int eNew;
-  if(eNum==-2){
-    eNew=getIterStartA(acs,pos);
-  }
-  else{
-    eNew=getNextEdgeA(acs,eNum);
-  }
-  if(eNew<=0){
+
+//idx处sd,操作是push下一组key和value，或者nil。
+//需要先调用init
+LUA_API int lua_sdatanext(lua_State *L,int idx){
+  //1=sharedata,2=key
+  //return key,value
+  sharedata* sd = getsharedata(L, idx);
+  accessor* acs=sd->acs;
+  int pos=sd->pos;
+  int inum=sd->inum;
+  if(inum==0){
     lua_pushnil(L);
     return 1;
   }
-  state->eNum=eNew;
-  int ch=getEChildA(acs,pos,eNew);
-  const void* ptr=getEdgeA(acs,eNew);
-  int type=getEdgeTypeA(acs,eNew);
+  sd->inum=getNextEdgeA(acs,inum);
+  int ch=getEChildA(acs,pos,inum);
+  const void* ptr=getEdgeA(acs,inum);
+  int type=getEdgeTypeA(acs,inum);
   switch(type){
     case INTEGER:{
       lua_Integer val=*(lua_Integer*)ptr;
@@ -649,35 +659,33 @@ static int lua_sdataiter(lua_State* L){
       break;
     }
     case STRING:{
-      // const char* val=(const char*)ptr;
-      // lua_pushstring(L, val);
-      // const char* val=(const char*)ptr;
-      // lua_pushsstring(L, val);
       const char* val=(const char*)ptr;
-      TString* ts=luaS_internshrstr(L,val,strlen(val));
-      lua_pushsstring(L, getstr(ts));
+      if(strlen(val)>LUAI_MAXSHORTLEN){
+        //长字符串直接用这个
+        //lua本身不对长串intern，所以地址不同没关系
+        lua_pushsstring(L, val);
+      }
+      else{
+        lua_pushstring(L, val);
+      }
       break;
     }
     default:{
       lua_pushnil(L);
-      break;
+      return 1;
     }
   }
   pushSdataVal(L, acs,ch);
   return 2;
 }
 
-LUA_API int lua_sdatapairs(lua_State *L){
-  sharedata* sd = getsharedata(L, -1);
-  lua_pushcfunction(L, lua_sdataiter);
-  sdata_pstate* state=(sdata_pstate*)lua_newuserdata(L, sizeof(sdata_pstate));
-  state->acs = sd->acs;
-  state->pos = sd->pos;
-  state->eNum = -2;
-  //printf("%ld\n",(long) state);
-  lua_pushinteger(L, state->eNum);
-  return 3;
+LUA_API void lua_initsdataiter(lua_State *L,int idx){
+  sharedata* sd = getsharedata(L,idx);
+  accessor* acs=sd->acs;
+  int pos=sd->pos;
+  sd->inum=getIterStartA(acs,pos);
 }
+
 
 
 //从path生成一个sdata，并放到栈顶

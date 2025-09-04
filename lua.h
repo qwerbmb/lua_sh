@@ -247,8 +247,9 @@ LUA_API void  (lua_pushboolean) (lua_State *L, int b);
 LUA_API void  (lua_pushlightuserdata) (lua_State *L, void *p);
 LUA_API int   (lua_pushthread) (lua_State *L);
 LUA_API void (lua_createsdata) (lua_State *L);
-LUA_API void (lua_pushemptysdata) (lua_State *L);
+
 LUA_API const char* (lua_pushsstring) (lua_State *L, const char* ptr);
+LUA_API void (lua_pushemptysdata) (lua_State *L);
 
 /*
 ** get functions (Lua -> stack)
@@ -270,6 +271,9 @@ LUA_API void (lua_indexsdata) (lua_State *L, int idx);
 LUA_API void (lua_sdata2table) (lua_State *L);
 LUA_API int (lua_sdatapairs) (lua_State *L);
 
+LUA_API const char* (lua_getsdname)(lua_State *L, int idx);
+LUA_API int (lua_sdatanext)(lua_State *L,int idx);
+LUA_API void (lua_initsdataiter)(lua_State *L,int idx);
 
 /*
 ** set functions (stack -> Lua)
