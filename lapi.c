@@ -519,17 +519,13 @@ static sharedata* getsharedata(lua_State *L, int idx) {
   return NULL;
 }
 
+//获取一个sharedata的path
 LUA_API const char* lua_getsdname(lua_State *L, int idx){
   sharedata* sd=getsharedata(L, idx);
   if(sd==NULL){
     return NULL;
   }
   return sd->acs->path;
-}
-
-//push一个空的sharedata，用于lib设置元表
-LUA_API void lua_pushemptysdata(lua_State *L){
-  lua_pushnsdata(L, NULL, 0);
 }
 
 //如果栈顶是一个sharedata，把对应的table push上去，不会pop

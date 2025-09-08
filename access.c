@@ -17,7 +17,7 @@
 #include "structure.h"
 #include "lsharedata.h"
 
-/// @brief 计算出所有str的hash，存到acs里面
+/// @brief 计算出一个acs中所有str在当前进程的hash，存到acs里面
 /// @param L 
 /// @param acs 
 static void setGlobalHash(lua_State* L,accessor* acs){
@@ -29,15 +29,12 @@ static void setGlobalHash(lua_State* L,accessor* acs){
         h[i]=luaS_hash(val,strlen(val),g->seed);
     }
 }
-/*
-str里再存一个自身偏移量，然后查找复杂度就是O(acs数量)
-*/
-
 
 /// @brief 从一个指针建立访问器
 /// @param L
 /// @param ptr 指向writefile生成的文件内容的指针
 /// @param fd 文件描述符，用于锁
+/// @return 
 static struct accessor* getAccessor(lua_State* L,void* ptr,int fd){
     //struct accessor* acs=calloc(1,sizeof(struct accessor));
     struct accessor* acs=luaM_new(L,accessor);
@@ -87,7 +84,7 @@ static struct accessor* getAccessor(lua_State* L,void* ptr,int fd){
 /// @param pos 节点编号
 /// @param val key的值
 /// @param ktype key的类型
-/// @return 出边编号，or -1
+/// @return 出边编号，or -1 (其实应该return 0的，0不是合法的边)
 int findEdgeA(struct accessor* acs, int pos, const void* val,int ktype) {
     if (pos == -1) {
         return -1;
@@ -152,7 +149,8 @@ static void setstk(lua_State* L,const void* key,int ktype,StkId val){
     }
 }
 
-//setobj2s(L,stkid dst,tvalue src)
+//参数不一样的index，从sd index key，结果写入val
+//和lapi里面那个的作用没区别，性能也许好一点
 void indexA(lua_State* L,const TValue* sd,TValue* key,StkId val) {
     sharedata* s=sdvalue(sd);
     accessor* acs=s->acs;
@@ -279,7 +277,10 @@ struct accessor* getAccessorFromFile(lua_State *L,const char* path){
     return acs;
 }
 
-//从文件描述符获取一块等于文件大小的共享内存
+/// @brief 从文件描述符获取一块等于文件大小的共享内存
+/// @param L 
+/// @param fd 文件描述符
+/// @return 指向该内存的指针
 static void* getShare(lua_State* L,int fd){
     struct stat sb;
     if (fstat(fd, &sb) == -1) {
@@ -308,6 +309,9 @@ static void* getShare(lua_State* L,int fd){
 }
 
 /// @brief 从文件获取一个acs，并加载到shm
+/// @param L
+/// @param path
+/// @return
 struct accessor* getAccessorFromShare(lua_State *L,const char* path){
     int fd = open(path, O_RDONLY);
     if (fd == -1) {

@@ -189,6 +189,7 @@ TString *luaS_createlngstrobj (lua_State *L, size_t l) {
   return ts;
 }
 
+//todo:acsgc的时候还要处理stringtable，现在只在结束时gc所以没影响
 
 void luaS_remove (lua_State *L, TString *ts) {
   stringtable *tb = &G(L)->strt;
