@@ -31,7 +31,7 @@
 #include "lvm.h"
 
 #include "lsharedata.h"
-
+#include "access.h"
 
 
 const char lua_ident[] =
@@ -535,7 +535,7 @@ LUA_API void lua_sdata2table(lua_State *L){
     lua_pushnil(L);
   }
   else{
-    luaR_sdata2table(L, sd);
+    build_full_tableA(L,sd->acs,sd->pos);
   }
   
 }
@@ -597,15 +597,15 @@ LUA_API void lua_indexsdata(lua_State *L, int idx){
   int id=-1;
   if(ttisinteger(key)){
     lua_Integer k = lua_tointeger(L, kidx);
-    id=luaR_getEdgeI(L, sd, k);
+    id=findEdgeA(sd->acs,sd->pos,&k,INTEGER);
   }
   else if (ttisnumber(key)){
     lua_Number k = lua_tonumber(L, kidx);
-    id=luaR_getEdgeD(L, sd, k);
+    id=findEdgeA(sd->acs,sd->pos,&k,DOUBLE);
   }
   else if (ttisstring(key)){
     const char* k = lua_tostring(L, kidx);
-    id=luaR_getEdgeS(L, sd, k);
+    id=findEdgeA(sd->acs,sd->pos,k,STRING);
     // printf("%s = %d\n",k,id);
   }
   if(id==-1){
@@ -617,7 +617,7 @@ LUA_API void lua_indexsdata(lua_State *L, int idx){
   }
 
   //得到子节点编号
-  int ch=luaR_getChild(L, sd, id);
+  int ch=getEChildA(sd->acs,sd->pos,id);
   //数据push上去
   pushSdataVal(L, sd->acs, ch);
   return;
