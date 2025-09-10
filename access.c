@@ -219,7 +219,8 @@ void build_full_tableA(lua_State* L, struct accessor* acs,int pos) {
                 break;
 
         }
-    } else {
+    } 
+    else {
         // 非叶
         lua_createtable(L, 0, 0);
         for(int i=acs->head[pos];i!=0;i=acs->e[i].next){
