@@ -42,7 +42,9 @@
 
 // #define eqshrstr(a,b)	check_exp((a)->tt == LUA_VSHRSTR,((a)->isShare ||(b)->isShare) ?  luaS_eqshrstr(a,b): ((a)==(b)))
 
-#define ghash(L,s) (s->isShare ? luaS_gethash(L,s) : s->hash)
+// #define ghash(L,s) (s->isShare ? luaS_gethash(L,s) : s->hash)
+
+// #define ghash(L,s) (s->hash)
 
 LUAI_FUNC unsigned int luaS_hash (const char *str, size_t l, unsigned int seed);
 LUAI_FUNC unsigned int luaS_hashlongstr (TString *ts);

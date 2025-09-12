@@ -1,4 +1,4 @@
-local path="./data.bin"
+local path="./huge_data.bin"
 local sd=sharelib.Get(path,1)
 local ttb=sharelib.getData(sd)
 local function traverse(t1)
@@ -10,8 +10,9 @@ local function traverse(t1)
         end
     end
 end
-
+traverse(ttb)
 while(true) do
-    traverse(ttb)
+    
+    -- collectgarbage("collect")
 end
 

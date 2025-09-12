@@ -286,6 +286,7 @@ LUA_API int lua_type (lua_State *L, int idx) {
 LUA_API const char *lua_typename (lua_State *L, int t) {
   UNUSED(L);
   api_check(L, LUA_TNONE <= t && t < LUA_NUMTYPES, "invalid type");
+  // printf("call typename : %s\n", ttypename(t));
   return ttypename(t);
 }
 
@@ -539,7 +540,7 @@ LUA_API void lua_sdata2table(lua_State *L){
   }
   
 }
-
+//todo:改类型名
 //把(acs,ch)对应的节点数据push到栈上
 static void pushSdataVal(lua_State *L, accessor* acs, int ch){
   //如果不是叶子节点，返回一个新的sharedata
@@ -711,6 +712,11 @@ LUA_API void lua_createsdata(lua_State *L){
     return ;
 }
 
+LUA_API int lua_checkstrshare(lua_State *L,int idx){
+  const char* s=lua_tostring(L,idx);
+  TString * ts=(TString*)(s-strpre);
+  return ts->isShare;
+}
 
 /*
 ** push functions (C -> stack)

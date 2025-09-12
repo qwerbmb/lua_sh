@@ -89,6 +89,7 @@ unsigned int luaS_hashlongstr (TString *ts) {
 
 static void tablerehash (lua_State* L,TString **vect, int osize, int nsize) {
   int i;
+  (void)L;
   for (i = osize; i < nsize; i++)  /* clear new elements */
     vect[i] = NULL;
   for (i = 0; i < osize; i++) {  /* rehash old part of the array */
@@ -96,7 +97,7 @@ static void tablerehash (lua_State* L,TString **vect, int osize, int nsize) {
     vect[i] = NULL;
     while (p) {  /* for each string in the list */
       TString *hnext = p->u.hnext;  /* save next */
-      unsigned int h = lmod(ghash(L,p), nsize);  /* new position */
+      unsigned int h = lmod(p->hash, nsize);  /* new position */
       p->u.hnext = vect[h];  /* chain it into array */
       vect[h] = p;
       p = hnext;
@@ -193,7 +194,7 @@ TString *luaS_createlngstrobj (lua_State *L, size_t l) {
 
 void luaS_remove (lua_State *L, TString *ts) {
   stringtable *tb = &G(L)->strt;
-  TString **p = &tb->hash[lmod(ghash(L,ts), tb->size)];
+  TString **p = &tb->hash[lmod(ts->hash, tb->size)];
   while (*p != ts)  /* find previous element */
     p = &(*p)->u.hnext;
   *p = (*p)->u.hnext;  /* remove element from its list */
@@ -249,6 +250,8 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
     }
     a=a->next;
   }
+  // printf("newstr: %.*s addr= %ld\n", (int)l, str,(long)str);
+  // printf("strt size: %d / %d \n",tb->nuse,tb->size);
   /* else must create a new string */
   if (tb->nuse >= tb->size) {  /* need to grow string table? */
     growstrtab(L, tb);

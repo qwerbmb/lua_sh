@@ -81,9 +81,9 @@
 #define hashmod(t,n)	(gnode(t, ((n) % ((sizenode(t)-1)|1))))
 
 
-//#define hashstr(t,str)		hashpow2(t, (str)->hash)
+#define hashstr(t,str)		hashpow2(t, (str)->hash)
 
-#define hashstr(L,t,str) hashpow2(t, ((str)->isShare ?luaS_gethash(L,(str)) : (str)->hash) )
+// #define hashstr(L,t,str) hashpow2(t, ((str)->isShare ?luaS_gethash(L,(str)) : (str)->hash) )
 #define hashboolean(t,p)	hashpow2(t, p)
 
 #define hashint(t,i)		hashpow2(t, i)
@@ -141,6 +141,7 @@ static int l_hashfloat (lua_Number n) {
 ** nodes.
 */
 static Node *mainposition (lua_State* L,const Table *t, int ktt, const Value *kvl) {
+  (void)L;
   switch (withvariant(ktt)) {
     case LUA_VNUMINT: {
       lua_Integer key = ivalueraw(*kvl);
@@ -152,7 +153,7 @@ static Node *mainposition (lua_State* L,const Table *t, int ktt, const Value *kv
     }
     case LUA_VSHRSTR: {
       TString *ts = tsvalueraw(*kvl);
-      return hashstr(L,t, ts);
+      return hashstr(t, ts);
     }
     case LUA_VLNGSTR: {
       TString *ts = tsvalueraw(*kvl);
@@ -748,7 +749,8 @@ const TValue *luaH_getint (Table *t, lua_Integer key) {
 在认为一定不在shm里时，L传入NULL
 */
 const TValue *luaH_getshortstr (lua_State* L,Table *t, TString *key) {
-  Node *n = hashstr(L,t, key);
+  Node *n = hashstr(t, key);
+  (void)L;
   lua_assert(key->tt == LUA_VSHRSTR);
   for (;;) {  /* check whether 'key' is somewhere in the chain */
     if (keyisshrstr(n) && eqshrstr(keystrval(n), key))

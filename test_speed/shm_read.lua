@@ -1,4 +1,4 @@
-local path="./data.bin"
+local path="./huge_data.bin"
 local sd=sharelib.Get(path,1)
 
 local function traverse(t1)
@@ -10,9 +10,10 @@ local function traverse(t1)
         end
     end
 end
-
+traverse(sd)
 while(true) do
-    traverse(sd)
+    
+    -- collectgarbage("collect")
 end
 
 

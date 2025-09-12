@@ -29,8 +29,5 @@ local function ptime(action,...)
     return 
 end
 
-local path="./data.bin"
-sharelib.buildFile(tb,path)
-local sd=sharelib.Get(path)
-ptime(traverse,sd)
+
 ptime(traverse,tb)

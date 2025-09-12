@@ -5,16 +5,15 @@ import subprocess
 import signal
 
 # ====== 参数区 ======
-LUA_INTERPRETER = "./lua_sh"  # lua解释器路径
+LUA_INTERPRETER = "../lua"  # lua解释器路径
 LUA_CODE_FILES = [
     "shm_copy.lua",
     "shm_read.lua",
-    # "shm_exist.lua",
     "tb_read.lua"
 ]  # lua代码文件列表
-NUM_PROCESSES = 5                # 每个代码文件启动的进程数
+NUM_PROCESSES = 20                # 每个代码文件启动的进程数
 SAMPLE_INTERVAL = 1              # 采样间隔（秒）
-TOTAL_RUN_TIME = 10              # 总运行时间（秒）
+TOTAL_RUN_TIME = 5              # 总运行时间（秒）
 
 def get_rss_kb(pid):
     """返回进程的RSS（KB）"""
@@ -53,8 +52,11 @@ def kill_process(proc):
 def monitor_processes(procs, sample_interval, total_time):
     """监控进程内存占用"""
     start_time = time.time()
+    # 定义每列宽度
+    header_fmt = "{:<8} {:>14} {:>15} {:>14} {:>15}"
+    row_fmt    = "{:<8.1f} {:>14.1f} {:>15d} {:>14.1f} {:>15d}"
     # 输出一次表头
-    print("Time(s)\tAVG_RSS(KB)\tTOTAL_RSS(KB)\tAVG_PSS(KB)\tTOTAL_PSS(KB)")
+    print(header_fmt.format("Time(s)", "AVG_RSS(KB)", "TOTAL_RSS(KB)", "AVG_PSS(KB)", "TOTAL_PSS(KB)"))
     while True:
         now = time.time()
         elapsed = now - start_time
@@ -81,8 +83,8 @@ def monitor_processes(procs, sample_interval, total_time):
             total_pss = sum(valid_pss)
         else:
             avg_pss = total_pss = -1
-        # 只输出数据
-        print("%.1f\t%.1f\t%d\t%.1f\t%d" % (
+        # 只输出数据（对齐）
+        print(row_fmt.format(
             elapsed, avg_rss, total_rss, avg_pss, total_pss
         ))
         time.sleep(sample_interval)

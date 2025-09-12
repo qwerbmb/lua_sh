@@ -18,6 +18,8 @@
 
 所有的实际数据都连续存放在char* sData中，存储时需要记录数据存储位置相对起始位置的偏移量，以及数据类型。由数据类型可以得到数据所占字节数。
 
+边通过链表存储：
+
 
 #### 树形结构如下：
 
@@ -95,3 +97,19 @@ sharedata对象在allgc链表上，被gc时不会释放自身的acs。
 包括从文件读取acs并创建sharedata，把一个table转换为文件，获取锁的状态，sharedata转换为table等。
 
 基本上是对上述access.h / generator.h中函数的封装。
+
+
+
+
+
+
+方案：
+acs再存一个sharedata* sdlist
+每次试图生成新的sd时改为访问sdlist取指针
+这样sd不需要gc，但是没法放在共享内存中
+而且这一堆sd有大量的重复结构acs
+或者可以改为
+acs int int ...
+然后指针指向int，地址-int*sizeof(int)-sizeof(acs*)就能得到acs
+总之可以先试一下sdlist，工程量应该很小
+

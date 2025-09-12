@@ -274,6 +274,7 @@ LUA_API int (lua_sdatapairs) (lua_State *L);
 LUA_API const char* (lua_getsdname)(lua_State *L, int idx);
 LUA_API int (lua_sdatanext)(lua_State *L,int idx);
 LUA_API void (lua_initsdataiter)(lua_State *L,int idx);
+LUA_API int (lua_checkstrshare)(lua_State *L,int idx);
 
 /*
 ** set functions (stack -> Lua)

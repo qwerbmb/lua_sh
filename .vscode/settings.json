@@ -16,6 +16,8 @@
         "limits": "c",
         "stdio.h": "c",
         "structure.h": "c",
-        "signal.h": "c"
-    }
+        "signal.h": "c",
+        "lapi.h": "c"
+    },
+    "workbench.editor.wrapTabs": true
 }

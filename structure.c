@@ -29,7 +29,8 @@ int addGH(hash_bucket* h,int hashsize,int* cntof,int* head,
         //string在前面存一个前缀，前缀不参与查找
         //使用(Tstring*)(ptr-strpre)获取TString*
         TString* ts=(TString*)(kq+*cntkq);
-        ts->hash=pos;
+        // ts->hash=pos;
+        
         if(ksize <= LUAI_MAXSHORTLEN){
             ts->shrlen = cast_byte(ksize) - 1;
             //lua的shr/lnglen都是不含\0的
@@ -37,6 +38,7 @@ int addGH(hash_bucket* h,int hashsize,int* cntof,int* head,
             ts->tt=LUA_VSHRSTR;
             ts->extra = 0;
             ts->isShare = 1;
+            ts->hash=luaS_hash((const char*)key,ksize-1,998244353);
         }
         else{
             ts->shrlen = 1;
@@ -44,7 +46,8 @@ int addGH(hash_bucket* h,int hashsize,int* cntof,int* head,
             ts->tt=LUA_VLNGSTR;
             ts->extra = 1;
             ts->isShare = 1;
-            //LNGSTR的hash在加载到accessor时计算，extra标记表示已有hash
+            ts->hash=luaS_hash((const char*)key,ksize-1,998244353);
+            //LNGSTR的extra标记表示已有hash
         }
         *cntkq=*cntkq+strpre;
     }
