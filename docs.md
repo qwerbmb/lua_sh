@@ -54,9 +54,6 @@ hash表有两种：全局hash表和每个节点单独的hash表。
 具体定义可以查看access.h。
 
 每当创建一个accessor时，会插入到global_state中的accessor* acslist，表示当前进程连接到的所有共享内存。
-然后计算该acs内所有TString对象在当前进程的hash值，存储在uint* hashval中。
-当需要获取一个在shm中的Tstring类型对象(标记isShare=1)的hash值时，需要遍历acslist找到它的所属acs，通过hashval[hash]获取在当前进程的hash值。
-这么做的原因是不同lua_state的seed是不同的，从而计算出的hash值不同，于是这个hash值不能存储在TString对象内。
 
 每当试图生成一个新的短字符串时，除了在已有的stringtable检查之外，还需要遍历acslist，检查是否有内容相同的TString对象。当试图从acs中读出一个字符串时也是如此。
 这样保证了lua原有的，直接靠地址判断短字符串相等的机制仍然能够正常工作。

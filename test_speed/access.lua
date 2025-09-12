@@ -14,7 +14,7 @@ end
 
 local function ctime(action,...)
     local t1=os.clock()
-    local num=1000
+    local num=10000
     for i=1,num do
         action(...)
     end
@@ -32,5 +32,7 @@ end
 local path="./data.bin"
 sharelib.buildFile(tb,path)
 local sd=sharelib.Get(path)
+local ttb=sharelib.getData(sd)
 ptime(traverse,sd)
 ptime(traverse,tb)
+ptime(traverse,ttb)

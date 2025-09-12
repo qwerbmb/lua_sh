@@ -11,7 +11,7 @@ LUA_CODE_FILES = [
     "shm_read.lua",
     "tb_read.lua"
 ]  # lua代码文件列表
-NUM_PROCESSES = 20                # 每个代码文件启动的进程数
+NUM_PROCESSES = 3                # 每个代码文件启动的进程数
 SAMPLE_INTERVAL = 1              # 采样间隔（秒）
 TOTAL_RUN_TIME = 5              # 总运行时间（秒）
 

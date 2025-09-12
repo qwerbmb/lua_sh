@@ -182,16 +182,16 @@ void writeFile(struct bData* global,int fd){
     int* headgh = g->headgh;
     int cntgh = g->cntgh;
 
-    int fileSize = sizeof(struct config) +
-                  n * sizeof(int) +          //heade
-                  n * sizeof(struct edge) + //edge,边从1开始
-                  n * sizeof(struct node) +   //node
-                  cnts +  //sData  
+    int fileSize = sizeof(struct config) + //文件开头的固定结构，指示后面几个区域的起始位置的偏移量
+                  n * sizeof(int) +          //heade，各个节点的出边链表的头节点
+                  n * sizeof(struct edge) + //edge,存储出边
+                  n * sizeof(struct node) +   //node，存储节点自身的数据
+                  cnts +  //sData，存储实际数据
                   
-                  cnth * sizeof(hash_bucket) +  //hData
-                  cnthh * sizeof(int) + //headh
-                  cntgh * sizeof(hash_bucket) +  //ghData
-                  n * 2 * sizeof(int) ;  //headgh
+                  cnth * sizeof(hash_bucket) +  //hData，hash桶，桶中存储每个节点的出边对应的key
+                  cnthh * sizeof(int) + //headh，采用链表法解决冲突，headh存储链表的头节点
+                  cntgh * sizeof(hash_bucket) +  //ghData，全局hash桶，桶中存储所有的key和value
+                  n * 2 * sizeof(int) ;  //headgh，同上，但是用于全局hash桶
     
     void* base=malloc(fileSize);
     char* addr=(char*)base;
