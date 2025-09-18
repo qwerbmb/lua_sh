@@ -136,7 +136,6 @@ static GCObject **getgclist (GCObject *o) {
       lua_assert(u->nuvalue > 0);
       return &u->gclist;
     }
-    case LUA_VSHAREDATA: return &gco2sd(o)->gclist;
     default: lua_assert(0); return 0;
   }
 }
