@@ -691,7 +691,6 @@ typedef struct sharedata {
   struct accessor* acs;
   int pos;
   int inum;
-  GCObject *gclist;
 } sharedata;
 
 

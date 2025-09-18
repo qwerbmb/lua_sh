@@ -68,16 +68,16 @@ typedef struct LG {
   { size_t t = cast_sizet(e); \
     memcpy(b + p, &t, sizeof(t)); p += sizeof(t); }
 
-static unsigned int luai_makeseed (lua_State *L) {
-  char buff[3 * sizeof(size_t)];
-  unsigned int h = cast_uint(time(NULL));
-  int p = 0;
-  addbuff(buff, p, L);  /* heap variable */
-  addbuff(buff, p, &h);  /* local variable */
-  addbuff(buff, p, &lua_newstate);  /* public function */
-  lua_assert(p == sizeof(buff));
-  return luaS_hash(buff, p, h);
-}
+// static unsigned int luai_makeseed (lua_State *L) {
+//   char buff[3 * sizeof(size_t)];
+//   unsigned int h = cast_uint(time(NULL));
+//   int p = 0;
+//   addbuff(buff, p, L);  /* heap variable */
+//   addbuff(buff, p, &h);  /* local variable */
+//   addbuff(buff, p, &lua_newstate);  /* public function */
+//   lua_assert(p == sizeof(buff));
+//   return luaS_hash(buff, p, h);
+// }
 
 #endif
 
@@ -341,6 +341,14 @@ int luaE_resetthread (lua_State *L, int status) {
   return status;
 }
 
+LUA_API int lua_closethread (lua_State *L, lua_State *from) {
+  int status;
+  lua_lock(L);
+  L->nCcalls = (from) ? getCcalls(from) : 0;
+  status = luaE_resetthread(L, L->status);
+  lua_unlock(L);
+  return status;
+}
 
 LUA_API int lua_resetthread (lua_State *L) {
   int status;
@@ -371,7 +379,8 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->warnf = NULL;
   g->ud_warn = NULL;
   g->mainthread = L;
-  g->seed = luai_makeseed(L);
+  // g->seed = luai_makeseed(L);
+  g->seed = 998244353;
   g->gcrunning = 0;  /* no GC while building state */
   g->strt.size = g->strt.nuse = 0;
   g->strt.hash = NULL;

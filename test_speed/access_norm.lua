@@ -1,10 +1,6 @@
-
-
-local siz=collectgarbage("count")
 dofile("data.lua")
 local tb=GetTable()
-local siz2=collectgarbage("count")
-print(siz2-siz)
+
 
 local function traverse(t1)
     for k,v in pairs(t1) do
@@ -33,11 +29,5 @@ local function ptime(action,...)
     return 
 end
 
-local path="./data.bin"
-sharelib.buildFile(tb,path)
-local sd=sharelib.Get(path)
-local ttb=sharelib.getData(sd)
--- ptime(traverse,sd)
--- collectgarbage("stop")
+
 ptime(traverse,tb)
-ptime(traverse,ttb)

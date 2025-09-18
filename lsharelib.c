@@ -173,6 +173,7 @@ static int l_shareLib_buildFile(lua_State* L) {
         }
         if(getWLock(fd) == -1){
             lua_pushinteger(L, -1);
+            close(fd);
             return 1;
         }
     }
@@ -190,6 +191,7 @@ static int l_shareLib_buildFile(lua_State* L) {
         }
         if(getWLock(fd) == -1){
             lua_pushinteger(L, -1);
+            close(fd);
             return 1;
         }
     }

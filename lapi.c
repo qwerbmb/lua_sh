@@ -31,7 +31,7 @@
 #include "lvm.h"
 
 #include "lsharedata.h"
-
+#include "access.h"
 
 
 const char lua_ident[] =
@@ -286,6 +286,7 @@ LUA_API int lua_type (lua_State *L, int idx) {
 LUA_API const char *lua_typename (lua_State *L, int t) {
   UNUSED(L);
   api_check(L, LUA_TNONE <= t && t < LUA_NUMTYPES, "invalid type");
+  // printf("call typename : %s\n", ttypename(t));
   return ttypename(t);
 }
 
@@ -519,17 +520,13 @@ static sharedata* getsharedata(lua_State *L, int idx) {
   return NULL;
 }
 
+//获取一个sharedata的path
 LUA_API const char* lua_getsdname(lua_State *L, int idx){
   sharedata* sd=getsharedata(L, idx);
   if(sd==NULL){
     return NULL;
   }
   return sd->acs->path;
-}
-
-//push一个空的sharedata，用于lib设置元表
-LUA_API void lua_pushemptysdata(lua_State *L){
-  lua_pushnsdata(L, NULL, 0);
 }
 
 //如果栈顶是一个sharedata，把对应的table push上去，不会pop
@@ -539,11 +536,11 @@ LUA_API void lua_sdata2table(lua_State *L){
     lua_pushnil(L);
   }
   else{
-    luaR_sdata2table(L, sd);
+    build_full_tableA(L,sd->acs,sd->pos);
   }
   
 }
-
+//todo:改类型名
 //把(acs,ch)对应的节点数据push到栈上
 static void pushSdataVal(lua_State *L, accessor* acs, int ch){
   //如果不是叶子节点，返回一个新的sharedata
@@ -601,15 +598,15 @@ LUA_API void lua_indexsdata(lua_State *L, int idx){
   int id=-1;
   if(ttisinteger(key)){
     lua_Integer k = lua_tointeger(L, kidx);
-    id=luaR_getEdgeI(L, sd, k);
+    id=findEdgeA(sd->acs,sd->pos,&k,INTEGER);
   }
   else if (ttisnumber(key)){
     lua_Number k = lua_tonumber(L, kidx);
-    id=luaR_getEdgeD(L, sd, k);
+    id=findEdgeA(sd->acs,sd->pos,&k,DOUBLE);
   }
   else if (ttisstring(key)){
     const char* k = lua_tostring(L, kidx);
-    id=luaR_getEdgeS(L, sd, k);
+    id=findEdgeA(sd->acs,sd->pos,k,STRING);
     // printf("%s = %d\n",k,id);
   }
   if(id==-1){
@@ -621,7 +618,7 @@ LUA_API void lua_indexsdata(lua_State *L, int idx){
   }
 
   //得到子节点编号
-  int ch=luaR_getChild(L, sd, id);
+  int ch=getEChildA(sd->acs,sd->pos,id);
   //数据push上去
   pushSdataVal(L, sd->acs, ch);
   return;
@@ -715,6 +712,11 @@ LUA_API void lua_createsdata(lua_State *L){
     return ;
 }
 
+LUA_API int lua_checkstrshare(lua_State *L,int idx){
+  const char* s=lua_tostring(L,idx);
+  TString * ts=(TString*)(s-strpre);
+  return ts->isShare;
+}
 
 /*
 ** push functions (C -> stack)

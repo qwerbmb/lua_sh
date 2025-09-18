@@ -158,6 +158,7 @@ LUA_API lua_State *(lua_newstate) (lua_Alloc f, void *ud);
 LUA_API void       (lua_close) (lua_State *L);
 LUA_API lua_State *(lua_newthread) (lua_State *L);
 LUA_API int        (lua_resetthread) (lua_State *L);
+LUA_API int (lua_closethread) (lua_State *L, lua_State *from);
 
 LUA_API lua_CFunction (lua_atpanic) (lua_State *L, lua_CFunction panicf);
 
@@ -249,7 +250,6 @@ LUA_API int   (lua_pushthread) (lua_State *L);
 LUA_API void (lua_createsdata) (lua_State *L);
 
 LUA_API const char* (lua_pushsstring) (lua_State *L, const char* ptr);
-LUA_API void (lua_pushemptysdata) (lua_State *L);
 
 /*
 ** get functions (Lua -> stack)
@@ -274,6 +274,7 @@ LUA_API int (lua_sdatapairs) (lua_State *L);
 LUA_API const char* (lua_getsdname)(lua_State *L, int idx);
 LUA_API int (lua_sdatanext)(lua_State *L,int idx);
 LUA_API void (lua_initsdataiter)(lua_State *L,int idx);
+LUA_API int (lua_checkstrshare)(lua_State *L,int idx);
 
 /*
 ** set functions (stack -> Lua)

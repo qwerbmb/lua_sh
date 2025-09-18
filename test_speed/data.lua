@@ -29700,46 +29700,7 @@ local DataTable =
 		QuickLink = 1 ,
 	} ,
 }
-function GetTable() return DataTable end
-
-function GetContent(SheetName) return DataTable[SheetName].Content end
-
-function __update__()
-	Update('common/data_mgr/expedition_relay_dat.lua')
-end
-
-local __Rating__ = DataTable.Rating.Content
-function GetRating() return __Rating__ end
-
-local __Buffs__ = DataTable.Buffs.Content
-function GetBuffs() return __Buffs__ end
-
-local __Triggers__ = DataTable.Triggers.Content
-function GetTriggers() return __Triggers__ end
-
-local __Misc__ = DataTable.Misc.Content
-function GetMisc() return __Misc__ end
-
-local __BattleMaps__ = DataTable.BattleMaps.Content
-function GetBattleMaps() return __BattleMaps__ end
-
-local __Rule__ = DataTable.Rule.Content
-function GetRule() return __Rule__ end
-
-local __TalentTree__ = DataTable.TalentTree.Content
-function GetTalentTree() return __TalentTree__ end
-
-local __DifficultConf__ = DataTable.DifficultConf.Content
-function GetDifficultConf() return __DifficultConf__ end
-
-local __Events__ = DataTable.Events.Content
-function GetEvents() return __Events__ end
-
-local __DifficultMapConf__ = DataTable.DifficultMapConf.Content
-function GetDifficultMapConf() return __DifficultMapConf__ end
-
-local __Attrs__ = DataTable.Attrs.Content
-function GetAttrs() return __Attrs__ end
-
+-- function GetTable() return DataTable end
+return DataTable
 --From:{["wc-status_item"]=normal, ["commit_revision"]=501661, ["path"]=xml/Y-远征接力赛配置.xlsx, ["author"]=xuzhihua}
 --autogen-end
